@@ -1,0 +1,9 @@
+{
+    "version": "2.0.0",
+    "tasks": [{
+        "label": "devbuild",
+        "command": "npm", // Could be any other shell command
+        "args": ["run", "devbuild"],
+        "type": "shell"
+    }]
+}
