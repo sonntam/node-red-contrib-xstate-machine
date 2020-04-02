@@ -1,0 +1,627 @@
+<style>
+	#red-ui-sidebar-smxstate-content, #red-ui-sidebar-smxstate-graph {
+		width: 100%;
+		height: 100%;
+	}
+</style>
+
+<script type="text/x-red" data-template-name="smxstate">
+	<div class="form-row">
+		<label for="node-input-name"><i class="icon-tag"></i> Name</label>
+		<input type="text" id="node-input-name" placeholder="Name">
+	</div>
+	<div class="form-row" style="margin-bottom: 0px;">
+        <label for="node-input-xstateDefinition" style="width: 200px"><i class="fa fa-wrench"></i> XState State-machine</label>
+        <input type="hidden" id="node-input-xstateDefinition" autofocus="autofocus">
+        <input type="hidden" id="node-input-noerr">
+    </div>
+    <div class="form-row node-text-editor-row" style="position:relative">
+        <div style="position: absolute; right:0; bottom:calc(100% + 3px);"><button id="node-smxstate-expand-js" class="red-ui-button red-ui-button-small"><i class="fa fa-expand"></i></button></div>
+        <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-xstateDefinition-editor" ></div>
+    </div>
+</script>
+
+<script type="text/javascript">
+// This code runs within the browser
+if( !RED ) {
+    var RED = {}
+}
+RED.smxstate = (function() {
+
+    function getCurrentlySelectedNodeId() {
+        let selector = $('#red-ui-sidebar-smxstate-display-selected');
+        let value    = selector.val();
+
+        if( !value ) return null;
+
+        return {
+            id: value,
+            rootId:  selector.children('option:selected').attr('data-reveal-id'),
+            aliasId: selector.children('option:selected').attr('data-alias-id'),
+            label:   selector.children('option:selected').text()
+        };
+    }
+
+    var animationStack = [];
+    var animationBusy  = false;
+    function animateFcn(data) {
+        
+        // Limit to 10 updates per second
+        if( data && (data.state.changed === true || data.state.changed === undefined) ) { animationStack.push(data); }
+        if( !animationBusy && animationStack.length > 0 ) {
+            animationBusy = true;
+
+            // Do the actual animation and data update
+            let data = animationStack.shift();
+
+            // Recurse into state
+            function getStatepaths(state, parentState) {
+                if( typeof state === "string" ) return [(parentState ? parentState + "." + state : state)]; 
+                
+                if( !state ) return parentState;
+                
+                let substates = Object.keys(state);
+                
+                let statePaths = [];
+                for( let substate of substates ) {
+                    let substatePath = parentState ? parentState + "." + substate : substate;
+                    if( state[substate] ) statePaths.push(substatePath);
+                    statePaths = statePaths.concat(getStatepaths(state[substate], substatePath));
+                }
+                //console.log(statePaths)
+                return statePaths;
+            }
+
+            let activeStates = getStatepaths(data.state.state);
+
+            // Reset all other states
+            let elements = $(
+                '#red-ui-sidebar-smxstate-content svg g.graph g:not([class="edge"])'
+            );
+            
+            elements.children('*[stroke][stroke!="transparent"]').attr('stroke','#000000');
+
+            // Style active states
+            for( let activeState of activeStates ) {
+                elements
+                    .has('title:contains(' + data.machineId + '.' + activeState + '/)')
+                    .has('title:not(:contains(/initial))')
+                    .children('*[stroke][stroke!="transparent"]')
+                    .attr('stroke','#FF0000');
+            }
+
+            let contextElement = RED.utils.createObjectElement( data.state.context, {
+                key: /*true*/null,
+                typeHint: "Object",
+                hideKey: false
+             } );
+
+            $('#red-ui-sidebar-smxstate-context-data').html(contextElement)
+
+            setTimeout(() => {
+                animationBusy = false;
+                animateFcn();
+            }, 100);
+            if( animationStack.length > 5 ) animationStack = animationStack.splice(-5);
+        }
+    }
+
+    function displayFcn() {
+        idObj = getCurrentlySelectedNodeId();
+        
+        // Clear graphics and get a new one
+        $('#red-ui-sidebar-smxstate-graph').empty();
+        
+        // Show spinner
+        $('#red-ui-sidebar-smxstate-graph').before(
+            $('<div id="red-ui-sidebar-smxstate-spinner">').append(
+                '<i class="fa fa-circle-o-notch fa-spin fa-5x fa-fw"></i> <span>Loading...</span>'
+            ).css( {
+                textAlign: "center",
+                margin: "10px"
+            })
+        );
+
+        $.ajax({
+            url: "smxstate/"+idObj.id+"/getgraph",
+            type:"POST",
+            success: function(resp) {
+                $('#red-ui-sidebar-smxstate-spinner').remove();
+                RED.notify(`Successfully rendered state-graph for ${idObj.label}`,{type:"success",id:"smxstate"});
+                
+                $('#red-ui-sidebar-smxstate-graph').replaceWith($(resp).attr("id", "red-ui-sidebar-smxstate-graph"));
+            },
+            error: function(jqXHR,textStatus,errorThrown) {
+                $('#red-ui-sidebar-smxstate-spinner').remove();
+                if (jqXHR.status == 404) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:"resource not found"}),"error");
+                } else if (jqXHR.status == 500) {
+                    RED.notify("Rendering of the state machine failed.","error");
+                } else if (jqXHR.status == 0) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.no-response")}),"error");
+                } else {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.unexpected",{status:jqXHR.status,message:textStatus})}),"error");
+                }
+            }    
+        });
+    }
+
+    function resetFcn() {
+
+        // Get selected machine and reset state and context to initial ones
+        let idObj    = getCurrentlySelectedNodeId();
+
+        if( !idObj ) return;
+
+        $.ajax({
+            url: "smxstate/"+idObj.id+"/reset",
+            type:"POST",
+            success: function(resp) {
+                RED.notify("State machine " + idObj.id + " was reset.", { type:"success", id:"smxstate" });
+            },
+            error: function(jqXHR,textStatus,errorThrown) {
+                if (jqXHR.status == 404) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.not-deployed")}),"error");
+                } else if (jqXHR.status == 500) {
+                    RED.notify("Error during reset. See logs for more info.","error");
+                } else if (jqXHR.status == 0) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.no-response")}),"error");
+                } else {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.unexpected",{status:jqXHR.status,message:textStatus})}),"error");
+                }
+            }    
+        });
+    }
+
+    function addStatemachineToSidebar(id, label, rootId, aliasId) {
+        $('#red-ui-sidebar-smxstate-display-selected').append(
+            $('<option>')
+                .attr("value", id)
+                .attr("data-reveal-id", rootId)
+                .attr("data-alias-id", aliasId ? aliasId : id)
+                .text(label)
+        );
+    }
+
+    function deleteStatemachineFromSidebar(id) {
+        $('#red-ui-sidebar-smxstate-display-selected').children('[value="' + id + '"]').remove();
+    }
+
+
+    function initFcn() {
+        // Build DOM
+        let content = $('<div>'); //.css({position: "relative", height: "100%"});
+        let toolbar = $('<div class="red-ui-sidebar-header" style="text-align: left;">')
+            .append(
+                $('<form>')
+                    .css("margin", 0)
+                    .append($('<label>')
+                        .attr("for", "red-ui-sidebar-smxstate-display-selected")
+                        .text("State machine to view:")
+                    )
+                    .append($('<select id="red-ui-sidebar-smxstate-display-selected">')
+                        .change( () => { RED.smxstate.display(); })
+                        .css("width", "100%")
+                        .append($('<option disabled selected value=>').text("-- select machine instance --"))
+                    )
+                    .append('<br>', $('<span class="button-group">')
+                        .append($('<a href="#" id="red-ui-sidebar-smxstate-revealRoot" class="red-ui-sidebar-header-button">')
+                            .append(
+                                '<i class="fa fa-search-minus"></i>'
+                            )
+                            .click(() => { RED.smxstate.revealRoot(); })
+                        ),
+                        $('<span class="button-group">')
+                        .append($('<a href="#" id="red-ui-sidebar-smxstate-reveal" class="red-ui-sidebar-header-button">')
+                            .append(
+                                '<i class="fa fa-search-plus"></i>'
+                            )
+                            .click(() => { RED.smxstate.reveal(); })
+                        ),
+                        $('<span class="button-group">')
+                        .append($('<a href="#" id="red-ui-sidebar-smxstate-reset" class="red-ui-sidebar-header-button">')
+                            .append(
+                                '<i class="fa fa-undo"></i>',
+                                '&nbsp;<span>reset</span>'
+                            )
+                            .click(() => { RED.smxstate.reset(); })
+                        ),
+                        $('<span class="button-group">')
+                        .append($('<a href="#" id="red-ui-sidebar-smxstate-refresh" class="red-ui-sidebar-header-button">')
+                            .append(
+                                '<i class="fa fa-refresh"></i>',
+                                '&nbsp;<span>refresh graph</span>'
+                            )
+                            .click(() => { RED.smxstate.display(); })
+                        )
+                    )
+            );
+        
+        RED.popover.tooltip(toolbar.find('#red-ui-sidebar-smxstate-reset'),"Reset to initial state");
+        RED.popover.tooltip(toolbar.find('#red-ui-sidebar-smxstate-revealRoot'),"Reveal instance in flow");
+        RED.popover.tooltip(toolbar.find('#red-ui-sidebar-smxstate-reveal'),"Reveal prototype in flow");
+
+        let smxcontext = $('<div id="red-ui-sidebar-smxstate-context">')
+            .append(
+                $('<div id="red-ui-sidebar-smxstate-context-header">').text("Context data:")
+            ).append('<span id="red-ui-sidebar-smxstate-context-data" class="red-ui-debug-msg-payload">')
+        let smxdisplay = $('<div id="red-ui-sidebar-smxstate-content">').append('<svg id="red-ui-sidebar-smxstate-graph">');
+
+        toolbar.appendTo(content);
+        smxcontext.appendTo(content);
+        smxdisplay.appendTo(content);
+        
+
+        // Populate list
+        var that = this;
+        setTimeout( () => {
+            that.refresh();
+        }, 1000);
+
+        return {
+            content: content,
+            footer: toolbar
+        };
+    }
+
+    function refreshFcn() {
+        let nodes = RED.nodes.filterNodes({type: "smxstate"});
+        
+        // The RED.nodes.filterNodes function returns all nodes (including 
+        // deactivated ones) except of instances within subflows. Actually
+        // only a prototype-node within each subflow prototype is returned 
+        // (no instances!).
+        // 
+        // The property
+        //     node.d
+        // is true for deactivated nodes and the function
+        //     RED.workspaces.contains( node.z )
+        // returns false for prototype nodes within subflows
+        // 
+        // Because the node-red interface is lacking needed functionality we 
+        // instead request the data from the server every time.
+
+        // Clear list
+        $('#red-ui-sidebar-smxstate-display-selected option:not([disabled])').remove();
+
+        // Get node ids from server
+        $.ajax({
+            url: "smxstate/getnodes",
+            type:"GET",
+            success: function(resp) {
+                if( !Array.isArray(resp) ) resp = [resp];
+                for( let e of resp ) {
+                    addStatemachineToSidebar(e.id, e.path.labels.join('/'), e.rootId, e.alias);
+                }
+            },
+            error: function(jqXHR,textStatus,errorThrown) {
+                if (jqXHR.status == 404) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:"resource not found"}),"error");
+                } else if (jqXHR.status == 500) {
+                    RED.notify("Rendering of the state machine failed.","error");
+                } else if (jqXHR.status == 0) {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.no-response")}),"error");
+                } else {
+                    RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.unexpected",{status:jqXHR.status,message:textStatus})}),"error");
+                }
+            }    
+        });
+    }
+
+    function revealFcn() {
+        let idObj = getCurrentlySelectedNodeId();
+
+        if(!idObj) return;
+
+        // Reveal the prototype node within a subflow if it's in a subflow
+        RED.view.reveal(idObj.aliasId);
+    }
+
+    function revealRootFcn() {
+
+        let idObj = getCurrentlySelectedNodeId();
+
+        if(!idObj) return;
+
+        // Reveal the root instance of the node
+        RED.view.reveal(idObj.rootId);
+    }
+
+    return {
+        init: initFcn,
+        display: displayFcn,
+        reset: resetFcn,
+        refresh: refreshFcn,
+        addStatemachineToSidebar: addStatemachineToSidebar,
+        deleteStatemachineFromSidebar: deleteStatemachineFromSidebar,
+        animate: animateFcn,
+        revealRoot: revealRootFcn,
+        reveal: revealFcn
+    };
+})();
+</script>
+<script type="text/javascript">
+
+	// Get the default state machine via file inclusion
+	var defaultStateMachineCode = "const maxValueReached = (context, event) => {\r\n  return context.counter >= 10;\r\n};\r\n\r\nconst incrementCounter = (context, event) => {\r\n  context.counter += 1;\r\n}\r\n\r\nconst resetCounter = (context, event) => {\r\n  node.warn(\"RESET\");\r\n  context.counter = 0;\r\n}\r\n\r\nreturn {\r\n  machine: {\r\n    context: {\r\n        counter: 0\r\n    },\r\n    initial: 'count',\r\n    states: {\r\n      count: {\r\n          on: {\r\n              '': { target: 'reset', cond: 'maxValueReached' }\r\n          },\r\n          after: {\r\n            500: { target: 'count', actions: 'incrementCounter' }\r\n          }\r\n      },\r\n      reset: {\r\n          entry: 'resetCounter',\r\n          after: {\r\n              '1000': { target: 'count' }\r\n          }\r\n      }\r\n    }\r\n  },\r\n  // Configuration containing guards, actions, activities, ...\r\n  config: {\r\n      guards: { maxValueReached },\r\n      actions: { incrementCounter, resetCounter }\r\n  },\r\n  // Define listeners (can be an array of functions)\r\n  //    Functions get called on every update\r\n  listeners: (data) => { \r\n      node.warn(data.state + \":\" + data.context.counter); \r\n  }\r\n}";
+
+	RED.nodes.registerType('smxstate',{
+		category: 'function',
+		color: '#C7E9C0',
+		defaults: {
+			name: { value: "" },
+			xstateDefinition: { value: defaultStateMachineCode },
+			noerr: { value:0, required:true, validate:(v) => !v }
+		},
+		inputs:1,
+		outputs:3,
+		icon: "function.png",
+		label: function() {
+			return this.name || "smxstate";
+		},
+		inputLabels: "trigger",
+		outputLabels: ["changed", "statusChanged", "dataChanged" ], 
+		oneditprepare: function() {
+
+			var that = this;
+
+			this.editor = RED.editor.createEditor({
+				id: 'node-input-xstateDefinition-editor',
+				mode: 'ace/mode/nrjavascript',
+				value: $("#node-input-xstateDefinition").val(),
+				globals: {
+					msg:true,
+					context:true,
+					RED: true,
+					util: true,
+					flow: true,
+					global: true,
+					console: true,
+					Buffer: true,
+					setTimeout: true,
+					clearTimeout: true,
+					setInterval: true,
+					clearInterval: true
+				}
+			});
+
+			this.editor.focus();
+
+			RED.popover.tooltip($("#node-smxstate-expand-js"), RED._("node-red:common.label.expand"));
+
+			$("#node-smxstate-expand-js").on("click", function(e) {
+				e.preventDefault();
+				var value = that.editor.getValue();
+				RED.editor.editJavaScript({
+					value: value,
+					width: "Infinity",
+					cursor: that.editor.getCursorPosition(),
+					mode: "ace/mode/nrjavascript",
+					complete: function(v,cursor) {
+						that.editor.setValue(v, -1);
+						that.editor.gotoLine(cursor.row+1,cursor.column,false);
+						setTimeout(function() {
+							that.editor.focus();
+						},300);
+					}
+				})
+			})
+		},
+		oneditsave: function() {
+			var annot = this.editor.getSession().getAnnotations();
+			this.noerr = 0;
+			$("#node-input-noerr").val(0);
+			for (var k=0; k < annot.length; k++) {
+				//console.log(annot[k].type,":",annot[k].text, "on line", annot[k].row);
+				if (annot[k].type === "error") {
+					$("#node-input-noerr").val(annot.length);
+					this.noerr = annot.length;
+				}
+			}
+			$("#node-input-xstateDefinition").val(this.editor.getValue());
+
+			// TODO trigger update on panel to redraw state machine
+
+			this.editor.destroy();
+			delete this.editor;
+		},
+		oneditcancel: function() {
+			this.editor.destroy();
+			delete this.editor;
+		},
+		oneditresize: function(size) {
+			var rows = $("#dialog-form>div:not(.node-text-editor-row)");
+			var height = $("#dialog-form").height();
+			for (var i=0; i<rows.length; i++) {
+				height -= $(rows[i]).outerHeight(true);
+			}
+			var editorRow = $("#dialog-form>div.node-text-editor-row");
+			height -= (parseInt(editorRow.css("marginTop"))+parseInt(editorRow.css("marginBottom")));
+			$(".node-text-editor").css("height",height+"px");
+			this.editor.resize();
+		},
+		onpaletteadd: function() {
+			var that = this;
+			let uiComponents = RED.smxstate.init();
+			var uiObserver   = new MutationObserver(function(mutations) {
+				// This gets fired when the sidebar is shown or hidden
+				let visible = $(mutations[0].target).is(':visible');
+
+				if( visible ) {
+					RED.comms.unsubscribe('smxstate_transition', that.handleStateMachineTransition);
+					RED.comms.subscribe('smxstate_transition', that.handleStateMachineTransition);
+
+					// The runtime now sends state transition information of the last selected state-machine id
+				} else {
+					RED.comms.unsubscribe('smxstate_transition', that.handleStateMachineTransition);
+				}
+			});
+
+			RED.sidebar.addTab({
+				id: 'smxstate',
+				label: 'state-machines',
+				name: 'State-machines',
+				content: uiComponents.content,
+				toolbar: $('<div><span class="button-group"><a id="red-ui-sidebar-smxstate-open" class="red-ui-footer-button" href="#"><i class="fa fa-desktop"></i></a></span></div>'),
+				enableOnEdit: true,
+				pinned: false,
+				iconClass: 'fa fa-dot-circle-o',
+				action: 'contrib:show-smxstate-tab'
+			});
+			RED.actions.add('contrib:show-smxstate-tab', function() {
+				RED.sidebar.show('smxstate');
+			});
+
+			RED.events.on("nodes:add", function(node) { 
+				if( node.hasOwnProperty("type") && node.type == "smxstate" ) {
+					// DO NOTHING!
+				}
+			});
+
+			// Select the parent container for our sidebar
+			let sidebarContainer = document.querySelector('#red-ui-sidebar-smxstate-content').closest('div[style]');
+			
+			// Setup the observer
+			uiObserver.observe(sidebarContainer, {
+				attributes:true
+			});
+
+			// TODO: Extra view window
+			RED.popover.tooltip($("#red-ui-sidebar-smxstate-open"),RED._('node-red:debug.sidebar.openWindow'));
+			$("#red-ui-sidebar-smxstate-open").on("click", function(e) {
+					e.preventDefault();
+					alert("NOT YET IMPLEMENTED");
+					return;
+					subWindow = window.open(document.location.toString().replace(/[?#].*$/,"")+"debug/view/view.html"+document.location.search,"nodeREDDebugView","menubar=no,location=no,toolbar=no,chrome,height=500,width=600");
+					subWindow.onload = function() {
+						subWindow.postMessage({event:"workspaceChange",activeWorkspace:RED.workspaces.active()},"*");
+					};
+				});
+
+			
+			// Subscribe to comms
+			this.handleStateMachineTransition = function(t,o) {
+				if( !(typeof o === "object") || !("type" in o) || o.type !== "transition" ) return;
+
+				let id = o.id;
+				
+				// Animate graph
+				RED.smxstate.animate(o);
+			};
+
+			this.handleStateMachineDisplay = function(t,o) {
+				if( !(typeof o === "object") || !("type" in o) ) return;
+
+				switch( o.type.toLowerCase() ) {
+					case 'add':
+						// Add to sidebar
+						if( !Array.isArray(o.data) ) o.data = [o.data];
+						for( let el of o.data )
+						RED.smxstate.addStatemachineToSidebar(el.id, el.path.labels.join('/'), el.rootId, el.alias);
+						break;
+					case 'delete':
+						// Remove from sidebar
+						if( !Array.isArray(o.data) ) o.data = [o.data];
+						for( let el of o.data ) 
+							RED.smxstate.deleteStatemachineFromSidebar(el.id);
+
+						break;
+					case 'transition':
+						// TODO: handle state update and colorize visualization
+						// TODO: Probably add a checkbox in the panel to enable/disable animation
+						break;
+				}
+			}
+
+			RED.comms.subscribe('smxstate', this.handleStateMachineDisplay);
+		},
+		onpaletteremove: function() {
+			RED.comms.unsubscribe('smxstate', this.handleStateMachineDisplay);
+			RED.comms.unsubscribe('smxstate_transition', this.handleStateMachineTransition);
+			RED.sidebar.removeTab('smxstate');
+			RED.actions.remove("contrib:show-smxstate-tab");
+
+			delete RED.smxstate;
+		}
+	});
+</script>
+
+<script type="text/x-red" data-help-name="smxstate">
+	<p>A finite state machine implementation for node red</p>
+
+	<h3>Properties</h3>
+		<dl class="message-properties">
+			<dt>name<span class="property-type">string</span></dt>
+			<dd>The name of the node as displayed in the editor</dd>
+			<dt>FSM<span class="property-type">json </span></dt>
+			<dd>
+	The json object which descibes the state machine.
+	It needs to contain the initial state and possible transitions.
+	For more information see details below</dd>
+			<dt>Send initial state<span class="property-type">boolean </span></dt>
+			<dd>Enable to trigger sending the intital state after 100ms after the flow is started.</dd>
+			<dt>Show transition errors<span class="property-type">boolean </span></dt>
+			<dd>Enable / disable error msgs when triggering actions.</dd>
+		</dl>
+
+	<h3>Inputs</h3>
+	<dl class="message-properties">
+	<dt>topic <span class="property-type">string</span></dt>
+	<dd>
+		- <i>reset</i> to reset to initial state<br/>
+		- <i>[transition]</i> to trigger a state change<br/>
+	</dd>
+		<dt>payload <span class="property-type">json</span> </dt>
+		<dd>
+			May contain a json payload, to add to the state output Example: <code>{ "x" : 10.0, y: "test" }</code>
+		 </dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<p>All outputs output the same data format: a msg, with its payload containing a <i>status</i> and a <i>data</i> object</p>
+		<li>changed
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state when there is any change in state.</dd>
+			</dl>
+        </li>
+        <li>statusChanged
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state only when the machine transitioned to a new status.</dd>
+			</dl>
+        </li>
+        <li>dataChanged
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state only when the data object of the state is changed.</dd>
+			</dl>
+		</li>
+	</ol>
+
+	<h3>Details</h3>
+	<p>Example json code for FSM:
+<pre>{
+  "state": {
+    "status": "IDLE",
+    "data" : { "x": 5 }
+  },
+  "transitions": {
+    "IDLE": {
+      "run": "RUNNING"
+    },
+    "RUNNING": {
+      "stop": "IDLE"
+    }
+  }
+}</pre>
+	<ul>
+		<li><i>state</i> holds the initial state. It needs to contain a <i>status</i> field and might contain a <i>data</i> object</li>
+		<li><i>transitions</i> holds the possible states as Keys (the upper case strings). As Values it holds one or more Key-Value Pairs, consisting of the transition (lower case strings) and the resulting state.</li>
+		<li>sending a msg with the topic set to the transition to the node, will trigger a state change.</li>
+		<li><i>reset</i> is a reserved transition to reset the machine to its initial state, so it cannot be used in the transition table.</li>
+	</ul>
+	</p>
+
+</script>

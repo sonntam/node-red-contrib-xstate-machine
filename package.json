@@ -1,0 +1,58 @@
+{
+  "name": "node-red-contrib-xstate-machine",
+  "version": "0.1.0",
+  "description": "Xstate-based state machine implementation using state-machine-cat visualization for node red.",
+  "license": "MIT",
+  "author": "Marcus Sonntag",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sonntam/node-red-contrib-xstate-machine"
+  },
+  "scripts": {
+    "test": "mocha \"tests/**/*_spec.js\"",
+    "build": "gulp build --production",
+    "node-red-test": "gulp build && node --inspect node_modules/node-red/red.js --userDir ./tmp --port 1880"
+  },
+  "keywords": [
+    "node-red",
+    "fsm",
+    "statemachine",
+    "state-machine",
+    "finite-state-machine",
+    "state machine",
+    "xstate",
+    "smcat",
+    "state-machine-cat"
+  ],
+  "node-red": {
+    "nodes": {
+      "smxstate": "dist/smxstate-node.js"
+    }
+  },
+  "dependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "indent-string": "^4.0.0",
+    "jsdom": "^16.2.2",
+    "state-machine-cat": "^6.0.5",
+    "xstate": "^4.8.0"
+  },
+  "devDependencies": {
+    "del": "^5.1.0",
+    "gulp": "^4.0.2",
+    "gulp-chmod": "^3.0.0",
+    "gulp-file-include": "^2.1.1",
+    "gulp-html-escape": "0.0.3",
+    "gulp-inline-source": "^4.0.0",
+    "gulp-js-escape": "^1.0.1",
+    "gulp-minify-inline": "^1.1.0",
+    "gulp-rename": "^2.0.0",
+    "gulp-webpack": "^1.5.0",
+    "html-webpack-plugin": "^3.2.0",
+    "merge-stream": "^1.0.1",
+    "minimist": "^1.2.5",
+    "mocha": "^5.2.0",
+    "node-red": "^1.0.4",
+    "node-red-node-test-helper": "^0.2.3",
+    "webpack": "^4.32.1"
+  }
+}
