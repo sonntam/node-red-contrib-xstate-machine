@@ -106,6 +106,11 @@ RED.smxstate = (function() {
                 RED.notify(`Successfully rendered state-graph for ${idObj.label}`,{type:"success",id:"smxstate"});
                 
                 $('#red-ui-sidebar-smxstate-graph').replaceWith($(resp).attr("id", "red-ui-sidebar-smxstate-graph"));
+                
+                setupZoom( 
+                    $('#red-ui-sidebar-smxstate-content')[0],
+                    $('#red-ui-sidebar-smxstate-graph')[0] 
+                );
             },
             error: function(jqXHR,textStatus,errorThrown) {
                 $('#red-ui-sidebar-smxstate-spinner').remove();
@@ -166,7 +171,7 @@ RED.smxstate = (function() {
 
     function initFcn() {
         // Build DOM
-        let content = $('<div>'); //.css({position: "relative", height: "100%"});
+        let content = $('<div>').css({display: "flex", flexDirection: "column", height: "100%"});
         let toolbar = $('<div class="red-ui-sidebar-header" style="text-align: left;">')
             .append(
                 $('<form>')
@@ -220,7 +225,8 @@ RED.smxstate = (function() {
         let smxcontext = $('<div id="red-ui-sidebar-smxstate-context">')
             .append(
                 $('<div id="red-ui-sidebar-smxstate-context-header">').text("Context data:")
-            ).append('<span id="red-ui-sidebar-smxstate-context-data" class="red-ui-debug-msg-payload">')
+            ).append('<span id="red-ui-sidebar-smxstate-context-data" class="red-ui-debug-msg-payload">');
+            
         let smxdisplay = $('<div id="red-ui-sidebar-smxstate-content">').append('<svg id="red-ui-sidebar-smxstate-graph">');
 
         toolbar.appendTo(content);

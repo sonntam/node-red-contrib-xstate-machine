@@ -3,6 +3,14 @@
 		width: 100%;
 		height: 100%;
 	}
+
+	#red-ui-sidebar-smxstate-content {
+		overflow: hidden;
+	}
+
+	#red-ui-sidebar-smxstate-context {
+		padding: 8px 10px;
+	}
 </style>
 
 <script type="text/x-red" data-template-name="smxstate">
@@ -161,7 +169,7 @@
 			});
 
 			// Select the parent container for our sidebar
-			let sidebarContainer = document.querySelector('#red-ui-sidebar-smxstate-content').closest('div[style]');
+			let sidebarContainer = document.querySelector('#red-ui-sidebar-smxstate-content').parentNode.parentNode;
 			
 			// Setup the observer
 			uiObserver.observe(sidebarContainer, {
