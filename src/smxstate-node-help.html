@@ -1,0 +1,76 @@
+<p>Provides a runtime environment for state machines using <a href="https://xstate.js.org/docs/" target="_blank">XSTATE</a>.</p>
+
+	<h3>Properties</h3>
+		<dl class="message-properties">
+			<dt>name<span class="property-type">string</span></dt>
+			<dd>The name of the node as displayed in the editor</dd>
+			<dt>FSM<span class="property-type">json </span></dt>
+			<dd>
+	The json object which descibes the state machine.
+	It needs to contain the initial state and possible transitions.
+	For more information see details below</dd>
+			<dt>Send initial state<span class="property-type">boolean </span></dt>
+			<dd>Enable to trigger sending the intital state after 100ms after the flow is started.</dd>
+			<dt>Show transition errors<span class="property-type">boolean </span></dt>
+			<dd>Enable / disable error msgs when triggering actions.</dd>
+		</dl>
+
+	<h3>Inputs</h3>
+	<dl class="message-properties">
+	<dt>topic <span class="property-type">string</span></dt>
+	<dd>
+		- <i>reset</i> to reset to initial state<br/>
+		- <i>[transition]</i> to trigger a state change<br/>
+	</dd>
+		<dt>payload <span class="property-type">json</span> </dt>
+		<dd>
+			May contain a json payload, to add to the state output Example: <code>{ "x" : 10.0, y: "test" }</code>
+		 </dd>
+	</dl>
+
+	<h3>Outputs</h3>
+	<ol class="node-ports">
+		<p>All outputs output the same data format: a msg, with its payload containing a <i>status</i> and a <i>data</i> object</p>
+		<li>changed
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state when there is any change in state.</dd>
+			</dl>
+        </li>
+        <li>statusChanged
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state only when the machine transitioned to a new status.</dd>
+			</dl>
+        </li>
+        <li>dataChanged
+			<dl class="message-properties">
+				<dt>payload <span class="property-type">json</span></dt>
+				<dd>Outputs the new state only when the data object of the state is changed.</dd>
+			</dl>
+		</li>
+	</ol>
+
+	<h3>Details</h3>
+	<p>Example json code for FSM:
+<pre>{
+  "state": {
+    "status": "IDLE",
+    "data" : { "x": 5 }
+  },
+  "transitions": {
+    "IDLE": {
+      "run": "RUNNING"
+    },
+    "RUNNING": {
+      "stop": "IDLE"
+    }
+  }
+}</pre>
+	<ul>
+		<li><i>state</i> holds the initial state. It needs to contain a <i>status</i> field and might contain a <i>data</i> object</li>
+		<li><i>transitions</i> holds the possible states as Keys (the upper case strings). As Values it holds one or more Key-Value Pairs, consisting of the transition (lower case strings) and the resulting state.</li>
+		<li>sending a msg with the topic set to the transition to the node, will trigger a state change.</li>
+		<li><i>reset</i> is a reserved transition to reset the machine to its initial state, so it cannot be used in the transition table.</li>
+	</ul>
+	</p>
