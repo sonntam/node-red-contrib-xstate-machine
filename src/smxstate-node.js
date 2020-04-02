@@ -11,6 +11,50 @@ module.exports = function (RED) {
 	var registeredNodeIDs = [];
 	var activeId = null;
 
+	function sendWrapper(node, sendFcn, _msgid, msgArr, cloneMsg) {
+		// Copied from function node
+		if (msgArr == null) {
+            return;
+        } else if (!util.isArray(msgArr)) {
+            msgArr = [msgArr];
+        }
+		var msgCount = 0;
+		
+		// We only have one msg output (2nd output), ignore all the others
+		if (!util.isArray(msgArr[0])) {
+			msgArr[0] = [msgArr[0]];
+		}
+
+		// shallow clone the msgArr because we may delete some elements
+		msgArr[0] = [...msgArr[0]];
+		msgArr.splice(1);
+
+		for (let n=0; n < msgArr[0].length; n++) {
+			let msg = msgArr[0][n];
+			if (msg !== null && msg !== undefined) {
+				if (typeof msg === 'object' && !Buffer.isBuffer(msg) && !util.isArray(msg)) {
+					if (msgCount === 0 && cloneMsg !== false) {
+						msgArr[0][n] = RED.util.cloneMessage(msgArr[0][n]);
+						msg = msgArr[0][n];
+					}
+					msg._msgid = _msgid;
+					msgCount++;
+				} else {
+					let type = typeof msg;
+					if (type === 'object') {
+						type = Buffer.isBuffer(msg)?'Buffer':(util.isArray(msg)?'Array':'Date');
+					}
+					node.error("Trying to send invalid message type.");
+				}
+			}
+		}
+        
+        if (msgCount>0) {
+			// Send to 2nd output
+            sendFcn.call(node,[null, ...msgArr]);
+        }
+	}
+
 	function getSandbox(node) {
 		return {
 			console:console,
@@ -45,7 +89,7 @@ module.exports = function (RED) {
                     node.trace.apply(node, arguments);
 				},
 				send: function(send, id, msgs, cloneMsg) {
-                    sendResults(node, send, id, msgs, cloneMsg);
+                    sendWrapper(node, send, id, msgs, cloneMsg);
                 },
             },
             env: {
@@ -203,10 +247,10 @@ result = (function(__send__,__done__){
 				node.error(`Error while executing listeners: ${err}`);
 			}
 
-			sendOutput(node, {
+			node.send([[{
 				topic: "state",
 				payload: payload
-			},null,null);
+			}]]);
 			
 			// Publish to editor
 			// Runtime only sends data if there are client connections/subscriptions
@@ -219,10 +263,6 @@ result = (function(__send__,__done__){
 				});
 			}
 		}).start();
-	}
-
-	function sendOutput(node, changed = null, statusChanged = null, dataChanged = null) {
-		node.send([changed, statusChanged, dataChanged])
 	}
 
 	function getNodeParentPath(node) {
