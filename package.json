@@ -11,6 +11,7 @@
   "scripts": {
     "test": "mocha \"tests/**/*_spec.js\"",
     "build": "gulp build --production",
+    "devbuild": "gulp build",
     "node-red-test": "gulp build && node --inspect node_modules/node-red/red.js --userDir ./tmp --port 1880"
   },
   "keywords": [
