@@ -21,7 +21,6 @@ RED.smxstate = (function() {
     var animationStack = [];
     var animationBusy  = false;
     function animateFcn(data) {
-        
         // Limit to 10 updates per second
         if( data && (data.state.changed === true || data.state.changed === undefined) ) { animationStack.push(data); }
         if( !animationBusy && animationStack.length > 0 ) {
@@ -65,7 +64,7 @@ RED.smxstate = (function() {
                     .children('*[stroke][stroke!="transparent"]')
                     .attr('stroke','#FF0000');
             }
-
+            
             let contextElement = RED.utils.createObjectElement( data.state.context, {
                 key: /*true*/null,
                 typeHint: "Object",
@@ -79,6 +78,90 @@ RED.smxstate = (function() {
                 animateFcn();
             }, 100);
             if( animationStack.length > 5 ) animationStack = animationStack.splice(-5);
+        }
+    }
+
+    function setupZoom(container, svgElement) {
+        // Zoom & Pan functions
+        //const svgelement = document.getElementById("svgImage");
+        //const container = document.getElementById("svgContainer");
+
+        var currentViewBoxCfg;
+        try {
+            currentViewBoxCfg = svgElement.getAttribute("viewBox");
+            currentViewBoxCfg = currentViewBoxCfg.split(/[\n\r\s]+/gis);
+            if( Array.isArray( currentViewBoxCfg ) && currentViewBoxCfg.length == 4 ) {
+                currentViewBoxCfg = currentViewBoxCfg.map( e => parseFloat(e) );
+                if( currentViewBoxCfg.some( e => !Number.isFinite(e)) )
+                    throw("Invalid viewbox");
+            } else {
+                throw("Invalid viewbox");
+            }
+        }
+        catch( err ) {
+            currentViewBoxCfg = null;
+        }
+
+        var viewBox;
+        if( !currentViewBoxCfg ) {
+            viewBox = { x: 0, y: 0, w: svgElement.clientWidth, h: svgElement.clientHeight }; //getAttribute("width"), h: svgElement.getAttribute("height") };
+            svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+        } else {
+            viewBox = { x: currentViewBoxCfg[0], y: currentViewBoxCfg[1], w: currentViewBoxCfg[2], h: currentViewBoxCfg[3] };
+        }
+        
+        var isPanning = false;
+        var startPoint = { x: 0, y: 0 };
+        var endPoint = { x: 0, y: 0 };;
+        var scale = 1;
+
+        container.onmousewheel = function (e) {
+            e.preventDefault();
+
+            const svgSize = { w: svgElement.clientWidth, h: svgElement.clientHeight };
+            var w = viewBox.w;
+            var h = viewBox.h;
+            var mx = e.offsetX;//mouse x  
+            var my = e.offsetY;
+            var dw = w * -Math.sign(e.deltaY) * 0.05;
+            var dh = h * -Math.sign(e.deltaY) * 0.05;
+            var dx = dw * mx / svgSize.w;
+            var dy = dh * my / svgSize.h;
+            viewBox = { x: viewBox.x + dx, y: viewBox.y + dy, w: viewBox.w - dw, h: viewBox.h - dh };
+            scale = svgSize.w / viewBox.w;
+            //zoomValue.innerText = `${Math.round(scale * 100) / 100}`;
+            svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+        }
+
+
+        container.onmousedown = function (e) {
+            isPanning = true;
+            startPoint = { x: e.x, y: e.y };
+        }
+
+        container.onmousemove = function (e) {
+            if (isPanning) {
+                endPoint = { x: e.x, y: e.y };
+                var dx = (startPoint.x - endPoint.x) / scale;
+                var dy = (startPoint.y - endPoint.y) / scale;
+                var movedViewBox = { x: viewBox.x + dx, y: viewBox.y + dy, w: viewBox.w, h: viewBox.h };
+                svgElement.setAttribute('viewBox', `${movedViewBox.x} ${movedViewBox.y} ${movedViewBox.w} ${movedViewBox.h}`);
+            }
+        }
+
+        container.onmouseup = function (e) {
+            if (isPanning) {
+                endPoint = { x: e.x, y: e.y };
+                var dx = (startPoint.x - endPoint.x) / scale;
+                var dy = (startPoint.y - endPoint.y) / scale;
+                viewBox = { x: viewBox.x + dx, y: viewBox.y + dy, w: viewBox.w, h: viewBox.h };
+                svgElement.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+                isPanning = false;
+            }
+        }
+
+        container.onmouseleave = function (e) {
+            isPanning = false;
         }
     }
 
