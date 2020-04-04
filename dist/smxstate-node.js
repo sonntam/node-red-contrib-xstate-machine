@@ -11,6 +11,50 @@ module.exports = function (RED) {
 	var registeredNodeIDs = [];
 	var activeId = null;
 
+	function sendWrapper(node, sendFcn, _msgid, msgArr, cloneMsg) {
+		// Copied from function node
+		if (msgArr == null) {
+            return;
+        } else if (!util.isArray(msgArr)) {
+            msgArr = [msgArr];
+        }
+		var msgCount = 0;
+		
+		// We only have one msg output (2nd output), ignore all the others
+		if (!util.isArray(msgArr[0])) {
+			msgArr[0] = [msgArr[0]];
+		}
+
+		// shallow clone the msgArr because we may delete some elements
+		msgArr[0] = [...msgArr[0]];
+		msgArr.splice(1);
+
+		for (let n=0; n < msgArr[0].length; n++) {
+			let msg = msgArr[0][n];
+			if (msg !== null && msg !== undefined) {
+				if (typeof msg === 'object' && !Buffer.isBuffer(msg) && !util.isArray(msg)) {
+					if (msgCount === 0 && cloneMsg !== false) {
+						msgArr[0][n] = RED.util.cloneMessage(msgArr[0][n]);
+						msg = msgArr[0][n];
+					}
+					msg._msgid = _msgid;
+					msgCount++;
+				} else {
+					let type = typeof msg;
+					if (type === 'object') {
+						type = Buffer.isBuffer(msg)?'Buffer':(util.isArray(msg)?'Array':'Date');
+					}
+					node.error("Trying to send invalid message type.");
+				}
+			}
+		}
+        
+        if (msgCount>0) {
+			// Send to 2nd output
+            sendFcn.call(node,[null, ...msgArr]);
+        }
+	}
+
 	function getSandbox(node) {
 		return {
 			console:console,
@@ -21,6 +65,9 @@ module.exports = function (RED) {
 				Machine: xstate.Machine,
 				assign: xstate.assign,
 				actions: xstate.actions,
+				sendUpdate: xstate.sendUpdate,
+				spawn: xstate.spawn,
+				after: xstate.after,
 				State: xstate.State
 			},
             RED: {
@@ -45,7 +92,7 @@ module.exports = function (RED) {
                     node.trace.apply(node, arguments);
 				},
 				send: function(send, id, msgs, cloneMsg) {
-                    sendResults(node, send, id, msgs, cloneMsg);
+                    sendWrapper(node, send, id, msgs, cloneMsg);
                 },
             },
             env: {
@@ -174,7 +221,7 @@ result = (function(__send__,__done__){
 		context.xstate.service = service;
 		context.xstate.machine = machine;
 
-		return service.onTransition( state => {
+		let transitionFcn = (state) => {
 			node.status({fill: 'green', shape: 'dot', text: 'state: ' + JSON.stringify(state.value)});
 
 			let payload = {
@@ -203,10 +250,11 @@ result = (function(__send__,__done__){
 				node.error(`Error while executing listeners: ${err}`);
 			}
 
-			sendOutput(node, {
+			// Output
+			node.send([[{
 				topic: "state",
 				payload: payload
-			},null,null);
+			}]]);
 			
 			// Publish to editor
 			// Runtime only sends data if there are client connections/subscriptions
@@ -218,11 +266,38 @@ result = (function(__send__,__done__){
 					machineId: context.xstate.blueprint.get('id')
 				});
 			}
-		}).start();
-	}
+		};
 
-	function sendOutput(node, changed = null, statusChanged = null, dataChanged = null) {
-		node.send([changed, statusChanged, dataChanged])
+		let dataChangedFcn = (context) => {
+
+			// Output
+			node.send([[{
+				topic: "context",
+				payload: context
+			}]]);
+			
+			// Publish to editor
+			// Runtime only sends data if there are client connections/subscriptions
+			if( activeId == node.id ) {
+				RED.comms.publish("smxstate_transition",{
+					type: 'context',
+					id: node.id,
+					context: context,
+					machineId: node.context().xstate.blueprint.get('id')
+				});
+			}
+		};
+
+		service
+			.onTransition( (state) => transitionFcn(state) )
+			.onChange( (context) => dataChangedFcn(context) )
+			.start();
+
+		// The transition function is immediately called after .start()
+		// because the statemachine transitions into its initial state.
+		// The context update function however does not get called, so we
+		// have to do it manually.
+		dataChangedFcn(service.state.context);
 	}
 
 	function getNodeParentPath(node) {
@@ -275,6 +350,10 @@ result = (function(__send__,__done__){
 
 		var node = this;
 		var nodeContext = this.context();
+
+		// array of active timers
+		this.outstandingIntervals = [];
+		this.outstandingTimers    = []; 
 
 		// init the node status
 		node.status({fill: 'red', shape: 'ring', text: 'invalid setup'});
@@ -411,6 +490,7 @@ result = (function(__send__,__done__){
 							smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
 							res.status(200).send(smcat_svg);
 
+							// Send update for context/state
 							let context = node.context().xstate;
 
 							setTimeout( () => {
@@ -418,6 +498,15 @@ result = (function(__send__,__done__){
 									type: 'transition',
 									id: node.id,
 									state: makeStateObject(context.service.state),
+									machineId: context.blueprint.get('id')
+								});
+							}, 100);
+
+							setTimeout( () => {
+								RED.comms.publish("smxstate_transition",{
+									type: 'context',
+									id: node.id,
+									context: context.service.state.context,
 									machineId: context.blueprint.get('id')
 								});
 							}, 100);
