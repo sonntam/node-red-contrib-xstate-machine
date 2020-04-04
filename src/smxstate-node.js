@@ -65,6 +65,9 @@ module.exports = function (RED) {
 				Machine: xstate.Machine,
 				assign: xstate.assign,
 				actions: xstate.actions,
+				sendUpdate: xstate.sendUpdate,
+				spawn: xstate.spawn,
+				after: xstate.after,
 				State: xstate.State
 			},
             RED: {
@@ -347,6 +350,10 @@ result = (function(__send__,__done__){
 
 		var node = this;
 		var nodeContext = this.context();
+
+		// array of active timers
+		this.outstandingIntervals = [];
+		this.outstandingTimers    = []; 
 
 		// init the node status
 		node.status({fill: 'red', shape: 'ring', text: 'invalid setup'});
