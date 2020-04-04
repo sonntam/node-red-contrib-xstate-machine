@@ -34,7 +34,7 @@ In the following the usage of both will be explained to get you started.
 
 ![Node image](images/node.png)
 
-Within this node you will find a javascript editor similar to the function-node. Here you can define your state-machine in a xstate-fashion. The javascript code must end with a `return` that returns an object of the following form:
+Within this node you will find a javascript editor similar to the function-node. Here you can define your state-machine in a (xstate-fashion)[https://xstate.js.org/docs/guides/machines.html]. The javascript code must end with a `return` that returns an object of the following form:
 
 ```js
 return {
@@ -47,18 +47,18 @@ return {
 }
 ```
 
-![Node settings dialog](images/settings-dialog.png)
-
 The `machine` object is an xstate machine. For details on how to model or formulate your machine see the excellent [xstate docs](https://xstate.js.org/docs/guides/machines.html#configuration).
 
 The `config` object contains all the named actions, activities, guards and services used in the `machine` object, see [here](https://xstate.js.org/docs/guides/machines.html#options).
 
-See the node's help within node-red for further details.
+See the node's help within node-red for further details:
+![Node settings dialog](images/settings-dialog.png)
 
 ## State-machines sidebar
 
 The side bar allows for visualizing a machine instance's current data context and its state.
 
+![Visualization of example machine](images/sidebar.png)
 
 ## Example flows
 
@@ -66,7 +66,31 @@ The side bar allows for visualizing a machine instance's current data context an
 
 The follwing example is based on the example machine from [state-machine-cat 😺](https://github.com/sverweij/state-machine-cat)
 
-Enter the following code snippet into a `smxstate` node or load the example flow [from here](examples/sm-cat-flow.json) into node-red:
+In the image below you can see the node-red setup for the example.
+
+![Example flow](images/example-flow.png)
+
+It tries to model a cat with 4 states
+ - sleep
+ - eat
+ - play
+ - meow
+
+ Events from the cat's point of view are
+  - given food
+  - no more food available
+  - given toy
+  - wake up
+  - tired
+  - bored
+
+The cat has an internal value-context containing the belly filling level.
+
+There are several state-transitions with guards, e.g. `[belly empty]` or `[belly full]` as well as timed transitions (see the image below).
+
+![Cat visualization](images/example-visualization_cat.png)
+
+Enter the following code snippet into a `smxstate` node or load the example flow [from here](examples/sm-cat-flow.json) into node-red to get the example started:
 
 ```js
 // Import shorthands from xstate object
@@ -184,11 +208,7 @@ const digest = (ctx, ev) => (cb) => {
 }
 ```
 
-![Example flow](images/example-flow.png)
-
-This will give you a state machine to play with. It incorporates actions, delayed events, services, guards and internal data context. Observe the state-machines state in the visualization panel while you inject events.
-
-![Visualization of example machine](images/sidebar.png)
+This will give you a state machine to play with. It incorporates actions, delayed events, services, guards and internal data context. Observe the state-machine's state in the visualization panel while you inject events.
 
 ## Development
 
@@ -196,12 +216,12 @@ This will give you a state machine to play with. It incorporates actions, delaye
 * Trigger the build tool-chain using `npm run devbuild` to create a development build version that is easy to debug. If you use Visual Studio Code for development you can use the provided launch.json to run a node-red environment where you can quickly test the node.
 * Running `npm run build` will create deployable production output in the `./dist` directory.
 
-## Ackknowledgements
+## Acknowledgements
 
 * To "Access Denied" for code snippet on [SVG zooming & panning](https://stackoverflow.com/a/52640900/542269)
 
 ## Caveats
 
-* If you use multiple nested state-machines using [services](https://xstate.js.org/docs/guides/communication.html#the-invoke-property) only the returned machine object will get rendered in the state-machines panel and the nested machines won't be drawn.
+* If you use multiple nested state-machines using [services](https://xstate.js.org/docs/guides/communication.html#the-invoke-property), only the returned machine object will get rendered in the state-machines panel and the nested machines won't be drawn.
 * It is not possible to update the context from within an activity. Activities are per definition only fire-and-forget effects without communication back to the machine ([see the post here](https://spectrum.chat/statecharts/general/update-context-from-an-activity~21c39e88-bc82-44c3-88d4-d33c5738f5d4)). Instead you have to use [services](https://xstate.js.org/docs/guides/communication.html). See the sm-cat example's eat and digest services. In xstate V5 activities will be replaced by services completely.
-* 🚨 **Beware of copy-pasting flows** that incorporate `smcat` nodes from the internet. Although the javascript code provided within a node is evaluated in a node.js vm environment it is easy to paste malicious code. See [this blog post](https://odino.org/eval-no-more-understanding-vm-vm2-nodejs/) for more information. To make sure nothing malicious is pasted, take a look at the javascript code within the node before deploying it in node-red.
+* 🚨 **Beware of copy-pasting flows** that incorporate `smxstate` nodes from the internet. Although the javascript code provided within a node is evaluated in a node.js vm environment it is easy to paste malicious code. See [this blog post](https://odino.org/eval-no-more-understanding-vm-vm2-nodejs/) for more information. To make sure nothing malicious is pasted, take a look at the javascript code within the node before deploying it in node-red.
