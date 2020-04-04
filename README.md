@@ -60,6 +60,12 @@ The side bar allows for visualizing a machine instance's current data context an
 
 ![Visualization of example machine](images/sidebar.png)
 
+There are a number of buttons available to control the editor view/control the machine:
+ - Reveal button (the zoom out icon) for the current machine instance: This shows and highlights the currently chosen machine in a flow. If it is within a subflow it highlights the subflow's instance.
+ - Reveal button (the zoom in icon) for prototype machines: If the machine instance runs within a subflow then the subflow is openend and the prototype node is highlighted.
+ - Reset button: This resets the current machine instance to its initial state and data context.
+ - Refresh graph button: This redraws the visualization manually (useful e.g. if the instance was changed on the server by another user or in a separate editor).
+
 ## Example flows
 
 ### Simple statemachine with data object
