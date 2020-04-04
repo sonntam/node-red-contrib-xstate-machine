@@ -1,0 +1,177 @@
+[
+    {
+        "id": "3a57f4c3.6a129c",
+        "type": "tab",
+        "label": "SM-Cat Example",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "2161d04e.04188",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "given food",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 260,
+        "y": 300,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    },
+    {
+        "id": "8055f738.2d2408",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "tired",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 250,
+        "y": 460,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    },
+    {
+        "id": "6203b5b5.1bf03c",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "bored",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 250,
+        "y": 500,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    },
+    {
+        "id": "c4052841.b88358",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "given toy",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 260,
+        "y": 420,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    },
+    {
+        "id": "fb2ba5a4.7d69d8",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "wake up",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    },
+    {
+        "id": "df45ec1f.3afd6",
+        "type": "debug",
+        "z": "3a57f4c3.6a129c",
+        "name": "Cat output",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 790,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "7ea8c4d5.401bbc",
+        "type": "debug",
+        "z": "3a57f4c3.6a129c",
+        "name": "State",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 770,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "6673b726.95c6b8",
+        "type": "smxstate",
+        "z": "3a57f4c3.6a129c",
+        "name": "sm-cat ",
+        "xstateDefinition": "// Import shorthands from xstate object\nconst { assign } = xstate; \n\n// First define names guards, actions, ...\n\n/**\n * Guards\n */\nconst bellyFull = (context, event) => {\n  return context.belly >= 100;\n};\n\nconst bellyEmpty = (context, event) => {\n    return context.belly <= 0;\n}\n\nconst bellyNotEmpty = (context, event) => {\n    return context.belly > 0;\n}\n\n/**\n * Actions\n */\nconst updateBelly = assign({\n    belly: (context, ev) => Math.max(\n        Math.min(\n            context.belly+ev.value,100\n        ), 0)\n});\n\n/**\n * Activities\n */\nconst meow = () => {\n  const interval = setInterval(() => node.send({payload: \"MEOW!\"}), 2000);\n  return () => clearInterval(interval);\n};\n\n/**\n * Services\n * see https://xstate.js.org/docs/guides/communication.html#invoking-callbacks\n */\nconst eat = (ctx, ev) => (cb) => {\n    const id = setInterval(() => cb({\n      type: 'eaten',\n      value: 5\n    }),500);\n    return () => clearInterval(id);\n};\n\nconst digest = (ctx, ev) => (cb) => {\n    const id = setInterval(() => cb({\n      type: 'digested',\n      value: -5\n    }),500);\n    return () => clearInterval(id);\n}\n\n/***************************\n * Main machine definition * \n ***************************/\n return {\n  machine: {\n    context: {\n        belly: 0    // Belly state, 100 means full, 0 means empty\n    },\n    initial: 'sleep',\n    states: {\n      sleep: {\n          on: {\n              'wake up': 'meow',\n          }\n      },\n      meow: {\n          invoke: { src: 'digest' },\n          on: {\n              'given toy': { target: 'play', cond: 'belly not empty' },\n              'given food': 'eat',\n              'digested': { actions: 'updateBelly' }\n          },\n          activities: ['meow']\n      },\n      play: {\n          invoke: { src: 'digest' },\n          on: {\n              tired: 'sleep',\n              bored: 'sleep',\n              'digested': { actions: 'updateBelly' },\n              '': { target: 'meow', cond: 'belly empty' }\n          },\n          after: {\n              5000: 'sleep',\n          }\n      },\n      eat: {\n          invoke: { src: 'eat' },\n          on: {\n              '': { target: 'sleep', cond: 'belly full' },\n              'no more food': { target: 'meow' },\n              'eaten': { actions: 'updateBelly' }\n          }\n      }\n    }\n  },\n  // Configuration containing guards, actions, activities, ...\n  // see above\n  config: {\n      guards: { \"belly full\": bellyFull, \"belly not empty\": bellyNotEmpty, \"belly empty\": bellyEmpty },\n      activities: { meow },\n      actions: { updateBelly },\n      services: { eat, digest }\n  }\n}",
+        "noerr": 0,
+        "x": 530,
+        "y": 400,
+        "wires": [
+            [
+                "7ea8c4d5.401bbc"
+            ],
+            [
+                "df45ec1f.3afd6"
+            ]
+        ]
+    },
+    {
+        "id": "ea1f8a96.72e8e8",
+        "type": "inject",
+        "z": "3a57f4c3.6a129c",
+        "name": "",
+        "topic": "no more food",
+        "payload": "",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 270,
+        "y": 340,
+        "wires": [
+            [
+                "6673b726.95c6b8"
+            ]
+        ]
+    }
+]
