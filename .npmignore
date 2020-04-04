@@ -5,3 +5,6 @@ examples/*
 tests/*
 gulpfile.js
 *.tgz
+src/*.html
+src/*client*.js
+src/defaultStateMachine.js
