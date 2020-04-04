@@ -3,3 +3,5 @@ images/*
 TODO.md
 examples/*
 tests/*
+gulpfile.js
+*.tgz
