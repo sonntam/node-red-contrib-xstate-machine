@@ -15,8 +15,8 @@ function getStateAction(actionTrigger) {
     return actionTrigger
         .filter( e => !e.hasOwnProperty('id') || !e.id.startsWith("xstate.after(") )
         .filter( e => !e.hasOwnProperty('sendId') || !e.sendId.startsWith("xstate.after(") )
-        .map( e => e + '()' )
-        .join(',');
+        .map( e => (e.id ? e.id : e.toString()).replace(/['";,{}\[\]]\s/sgi,'') + '()' )
+        .join(' ');
 }
 
 function getStateCode(state) {
@@ -25,19 +25,19 @@ function getStateCode(state) {
     if( state.onEntry && state.onEntry.length > 0 ) {
         let actionDef = getStateAction( state.onEntry );
         if( actionDef )
-            code.push( "entry/ " + actionDef );
+            code.push( "entry / " + actionDef );
     }
 
     if( state.activities && state.activities.length > 0 ) {
         let actionDef = getStateAction( state.activities );
         if( actionDef )
-            code.push( "during/ " + getStateAction(state.activities) );
+            code.push( "do / " + actionDef );
     }
 
     if( state.onExit && state.onExit.length > 0 ) {
         let actionDef = getStateAction( state.onExit );
         if( actionDef )
-            code.push( "exit/ " + getStateAction( state.onExit ) );
+            code.push( "exit / " + actionDef );
     }
 
     return code.join('\n');
@@ -143,8 +143,13 @@ function createTransitions(parentState) {
             continue;
         }
 
-        for( let targetState of transition.target ) {
-            transitionDefs.push( getStateName( transition.source ) + " => " + getStateName( targetState ) );
+        if( !transition.target ) {
+            // Self transition
+            transitionDefs.push( getStateName( transition.source ) + " => " + getStateName( transition.source ) );
+        } else {
+            for( let targetState of transition.target ) {
+                transitionDefs.push( getStateName( transition.source ) + " => " + getStateName( targetState ) );
+            }
         }
         
 
