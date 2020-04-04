@@ -1,3 +1,24 @@
+
+// Available variables/objects/functions:
+// XState
+// - Machine
+// - interpret
+// - assign
+// - send
+// - sendParent
+// - spawn
+// - raise
+// - actions
+// - XState (all XState exports)
+//
+// Common
+// - setInterval, setTimeout, clearInterval, clearTimeout
+// - node.send, node.warn, node.log, node.error
+// - context.get, context.set
+// - flow.get, flow.set
+// - env.get
+// - util
+
 // First define names guards, actions, ...
 
 /**
@@ -34,7 +55,6 @@ const resetCounter = (context, event) => {
  * Activities
  */
 const doStuff = () => {
-  debugger;
   const interval = setInterval(() => node.warn('BEEP'), 1000);
   return () => clearInterval(interval);
 };
