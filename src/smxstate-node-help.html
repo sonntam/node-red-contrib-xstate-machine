@@ -49,13 +49,17 @@ const { raise, log } = actions;</pre>
     <h3>Outputs</h3>
     <p>The two outports output messages of the following specifications:</p>
 	<ol class="node-ports">
-		<li>On occuring event/transition
+		<li>On occuring event/transition/change of context
             <dl class="message-properties">
 				<dt>topic <span class="property-type">string</span></dt>
-                <dd>Always equals to <code>"state"</code></dd>
+                <dd>Equals to <code>"state"</code> if an event or transition occured. If the data changed it equals to <code>"context"</code>.</dd>
 			<dl class="message-properties">
 				<dt>payload <span class="property-type">object</span></dt>
-                <dd>Contains an object that represents the current state of the machine. See details below for more information.</dd>
+                <dd>
+                    Contains an object that represents the current state of the machine if the topic is <code>"state"</code>.
+                    See details below for more information. In case of a changed context this contains an object with the new
+                    context value.
+                </dd>
 			</dl>
         </li>
         <li>Message sent internally from the machine
@@ -73,7 +77,9 @@ const { raise, log } = actions;</pre>
         <a href="https://xstate.js.org/docs/guides/machines.html" target="_blank">xstate documentation</a>
         for futher details about how to model your use-case as a xstate machine.
     </p>
-    <p>The <code>payload</code> objects in the messages output from the first outport have the following properties</p>
+    <p>
+        The <code>payload</code> objects for messages with a topic of <code>"state"</code> output from the 
+        first outport have the following properties:</p>
     <p>
         <dl class="message-properties">
             <dt>state <span class="property-type">string or object</span></dt>            
