@@ -1,0 +1,39 @@
+<style>
+!!!!include('../node_modules/@node-red/editor-client/public/red/style.min.css')
+</style>
+
+<!-- font awesome -->
+<style>
+@font-face {
+    font-family: "FontAwesome";
+    src: url("../node_modules/@node-red/editor-client/public/vendor/font-awesome/fonts/fontawesome-webfont.woff") format('woff');
+}
+!!!!include('../node_modules/@node-red/editor-client/public/vendor/font-awesome/css/font-awesome.min.css')
+</style>
+
+<div id="red-ui-editor" class="red-ui-editor">
+    <div id="red-ui-main-container" class="hide" style="display:block">
+        <div id="red-ui-sidebar" style="width: 490px;">
+            <div id="red-ui-sidebar-content">
+                <div style="height: 100%;">
+                    <div class="red-ui-sidebar-info">
+                        <div class="red-ui-sidebar-info-stack red-ui-stack">
+                            <div class="red-ui-palette-category expanded" style="">
+                                <div class="red-ui-palette-header"><i class="fa fa-angle-down expanded"></i><span>Node Help</span></div>
+                                <div style="position: relative;">
+                                    <div style="padding: 6px;">
+                                        <div class="red-ui-help">
+                                            <span class="red-ui-text-bidi-aware" dir>
+                                                !!!!include('../src/smxstate-node-help.html')
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

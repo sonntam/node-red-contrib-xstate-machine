@@ -19,6 +19,7 @@ const cfg = {
 	build: path.join(__dirname, 'dist'),
 	tmp: path.join(__dirname, 'tmp'),
 
+	testHtml: path.join(__dirname, 'tests/smxstate-help-viewer.html'),
 	nodeHtml: path.join(__dirname, 'src/smxstate-node.html'),
 	jsescape: path.join(__dirname, 'src/defaultStateMachine.js'),
 	copyFiles: [path.join(__dirname, 'src/smxstate-node.js')],
@@ -54,11 +55,18 @@ gulp.task('build:html', function () {
 	.pipe(gulp.dest(cfg.build));
 });
 
+gulp.task('build:testhtml', function(cb) {
+	if( cfg.production ) { console.log("Production build - doing nothing."); cb(); return; };
+	return gulp.src(cfg.testHtml)
+	.pipe(fileinclude({ prefix: '!!!!', basepath: '@file'}))
+	.pipe(gulp.dest(cfg.tmp));
+})
+
 gulp.task('clean', function(cb) {
 	return del('./dist/*.*', {
 		"force": true
 	}, cb);
 });
 
-gulp.task('build', gulp.series('clean', 'copy', 'build:jsescape', 'build:html'));
+gulp.task('build', gulp.series('clean', 'copy', 'build:jsescape', 'build:html', 'build:testhtml'));
 
