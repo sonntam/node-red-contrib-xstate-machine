@@ -333,10 +333,12 @@ RED.smxstate = (function() {
                 $('<div id="red-ui-sidebar-smxstate-context-header">').text("Context data:")
             ).append('<span id="red-ui-sidebar-smxstate-context-data" class="red-ui-debug-msg-payload">');
             
+        let smxdisplayhelp = $('<div>').css({ fontSize: "x-small", padding: "8px" }).append('<span><b>Pan:</b> Click+drag / <b>Zoom:</b> Mousewheel</span>');
         let smxdisplay = $('<div id="red-ui-sidebar-smxstate-content">').append('<svg id="red-ui-sidebar-smxstate-graph">');
 
         toolbar.appendTo(content);
         smxcontext.appendTo(content);
+        smxdisplayhelp.appendTo(content);
         smxdisplay.appendTo(content);
         
 
