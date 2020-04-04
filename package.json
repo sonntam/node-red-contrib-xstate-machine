@@ -16,12 +16,14 @@
   },
   "keywords": [
     "node-red",
-    "fsm",
+    "xstate",
+    "statecharts",
+    "machine",
     "statemachine",
     "state-machine",
-    "finite-state-machine",
     "state machine",
-    "xstate",
+    "fsm",
+    "finite-state-machine",
     "smcat",
     "state-machine-cat"
   ],
