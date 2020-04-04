@@ -191,13 +191,20 @@
 			
 			// Subscribe to comms
 			this.handleStateMachineTransition = function(t,o) {
-				if( !(typeof o === "object") || !("type" in o) || o.type !== "transition" ) return;
+				if( !(typeof o === "object") || !("type" in o) || typeof o.type !== "string" ) return;
 
-				let id = o.id;
-				
-				// Animate graph
-				// TODO: Probably add a checkbox in the panel to enable/disable animation
-				RED.smxstate.animate(o);
+				switch( o.type ) {
+					case 'transition':
+						// Animate graph
+						// TODO: Probably add a checkbox in the panel to enable/disable animation
+						RED.smxstate.animate(o);
+						break;
+					case 'context':
+						RED.smxstate.updateContext(o);
+						break;
+					default:
+						return;
+				}
 			};
 
 			this.handleStateMachineDisplay = function(t,o) {

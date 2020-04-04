@@ -18,11 +18,40 @@ RED.smxstate = (function() {
         };
     }
 
+    var updateContextStack = [];
+    var updateContextBusy  = false;
+
+    function updateContextFcn(data) {
+        // Limit to 10 updates per second
+        if( data && data.id && data.id === getCurrentlySelectedNodeId().id ) { updateContextStack.push(data.context); }
+        if( !updateContextBusy && updateContextStack.length > 0 ) {
+            updateContextBusy = true;
+
+            // Do the actual animation and data update
+            let context = updateContextStack.shift();
+
+            let contextElement = RED.utils.createObjectElement( context, {
+                key: /*true*/null,
+                typeHint: "Object",
+                hideKey: false
+             } );
+
+            $('#red-ui-sidebar-smxstate-context-data').html(contextElement)
+
+            setTimeout(() => {
+                updateContextBusy = false;
+                updateContextFcn();
+            }, 100);
+            if( updateContextStack.length > 5 ) updateContextStack = updateContextStack.splice(-5);
+        }
+    }
+
     var animationStack = [];
     var animationBusy  = false;
+
     function animateFcn(data) {
         // Limit to 10 updates per second
-        if( data && (data.state.changed === true || data.state.changed === undefined) ) { animationStack.push(data); }
+        if( data && data.state && (data.state.changed === true || data.state.changed === undefined) ) { animationStack.push(data); }
         if( !animationBusy && animationStack.length > 0 ) {
             animationBusy = true;
 
@@ -65,13 +94,7 @@ RED.smxstate = (function() {
                     .attr('stroke','#FF0000');
             }
             
-            let contextElement = RED.utils.createObjectElement( data.state.context, {
-                key: /*true*/null,
-                typeHint: "Object",
-                hideKey: false
-             } );
-
-            $('#red-ui-sidebar-smxstate-context-data').html(contextElement)
+            //updateContextFcn(data.state.context);
 
             setTimeout(() => {
                 animationBusy = false;
@@ -400,6 +423,7 @@ RED.smxstate = (function() {
         addStatemachineToSidebar: addStatemachineToSidebar,
         deleteStatemachineFromSidebar: deleteStatemachineFromSidebar,
         animate: animateFcn,
+        updateContext: updateContextFcn,
         revealRoot: revealRootFcn,
         reveal: revealFcn
     };

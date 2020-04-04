@@ -218,7 +218,7 @@ result = (function(__send__,__done__){
 		context.xstate.service = service;
 		context.xstate.machine = machine;
 
-		return service.onTransition( state => {
+		let transitionFcn = (state) => {
 			node.status({fill: 'green', shape: 'dot', text: 'state: ' + JSON.stringify(state.value)});
 
 			let payload = {
@@ -247,6 +247,7 @@ result = (function(__send__,__done__){
 				node.error(`Error while executing listeners: ${err}`);
 			}
 
+			// Output
 			node.send([[{
 				topic: "state",
 				payload: payload
@@ -262,7 +263,38 @@ result = (function(__send__,__done__){
 					machineId: context.xstate.blueprint.get('id')
 				});
 			}
-		}).start();
+		};
+
+		let dataChangedFcn = (context) => {
+
+			// Output
+			node.send([[{
+				topic: "context",
+				payload: context
+			}]]);
+			
+			// Publish to editor
+			// Runtime only sends data if there are client connections/subscriptions
+			if( activeId == node.id ) {
+				RED.comms.publish("smxstate_transition",{
+					type: 'context',
+					id: node.id,
+					context: context,
+					machineId: node.context().xstate.blueprint.get('id')
+				});
+			}
+		};
+
+		service
+			.onTransition( (state) => transitionFcn(state) )
+			.onChange( (context) => dataChangedFcn(context) )
+			.start();
+
+		// The transition function is immediately called after .start()
+		// because the statemachine transitions into its initial state.
+		// The context update function however does not get called, so we
+		// have to do it manually.
+		dataChangedFcn(service.state.context);
 	}
 
 	function getNodeParentPath(node) {
@@ -451,6 +483,7 @@ result = (function(__send__,__done__){
 							smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
 							res.status(200).send(smcat_svg);
 
+							// Send update for context/state
 							let context = node.context().xstate;
 
 							setTimeout( () => {
@@ -458,6 +491,15 @@ result = (function(__send__,__done__){
 									type: 'transition',
 									id: node.id,
 									state: makeStateObject(context.service.state),
+									machineId: context.blueprint.get('id')
+								});
+							}, 100);
+
+							setTimeout( () => {
+								RED.comms.publish("smxstate_transition",{
+									type: 'context',
+									id: node.id,
+									context: context.service.state.context,
 									machineId: context.blueprint.get('id')
 								});
 							}, 100);
