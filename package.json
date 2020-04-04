@@ -4,9 +4,12 @@
   "description": "Xstate-based state machine implementation using state-machine-cat visualization for node red.",
   "license": "MIT",
   "author": "Marcus Sonntag",
+  "bugs": {
+    "url": "https://github.com/sonntam/node-red-contrib-xstate-machine/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sonntam/node-red-contrib-xstate-machine"
+    "url": "git+https://github.com/sonntam/node-red-contrib-xstate-machine.git"
   },
   "scripts": {
     "test": "mocha \"tests/**/*_spec.js\"",
