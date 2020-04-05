@@ -29,6 +29,19 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Debug Currently open Mocha Test",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/mocha",
+            "args": [
+                "--inspect-brk",
+                "--colors",
+                "${file}"
+            ],
+            "port": 9229,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Node-Red Debugging environment",
             "program": "${workspaceRoot}/node_modules/node-red/red.js",
             "runtimeArgs": [
