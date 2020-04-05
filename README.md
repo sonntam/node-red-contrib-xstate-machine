@@ -20,7 +20,7 @@ The rest of the implementation is based on node-red's function and debug nodes.
 ## Installation
 
 * Via node-red: Search for "node-red-contrib-xstate-machine" in the palette manager
-* Via terminal: Run `npm install node-red-contrib-xstate-machine` in your node-red user folder (typically `~\.node-red`)
+* Via terminal: Run `npm install node-red-contrib-xstate-machine` in your node-red user folder (typically `~/.node-red` or `%HOMEPATH%\.node-red`)
 
 ## Usage
 
