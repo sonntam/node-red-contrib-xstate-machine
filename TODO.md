@@ -21,3 +21,4 @@ TODO
  - [ ] Write more examples
  - [ ] Implement functionality to be able to open the state-machine visualization in a new window
  - [ ] Maybe provide a third output that can send events to other statemachines using a `smxstate.send()` function of some sorts.
+ - [ ] See what it takes to put the visualization onto node-red-dashboard
