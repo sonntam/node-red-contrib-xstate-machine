@@ -7,9 +7,9 @@ module.exports = function (RED) {
 	var immutable = require('immutable');
 	xstate.smcat  = require('../src/xstate-smcat');
 
-	//global.registeredNodeIDs = [];
 	var registeredNodeIDs = [];
 	var activeId = null;
+	var renderTimeoutMs = 20000;
 
 	function sendWrapper(node, sendFcn, _msgid, msgArr, cloneMsg) {
 		// Copied from function node
@@ -470,7 +470,7 @@ result = (function(__send__,__done__){
 					try {
 						// Render state machine using smcat
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
-						
+
 						// Render in separate process with 10s timeout
 						smcat.render(smcat_machine, (output) => {
 							let smcat_svg;
@@ -510,7 +510,7 @@ result = (function(__send__,__done__){
 									machineId: context.blueprint.get('id')
 								});
 							}, 100);
-						}, 10000, true);
+						}, renderTimeoutMs, true);
 						
 						// Save the last provied graph ID
 						activeId = req.params.id;

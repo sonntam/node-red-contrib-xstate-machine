@@ -22,3 +22,4 @@ TODO
  - [ ] Implement functionality to be able to open the state-machine visualization in a new window
  - [ ] Maybe provide a third output that can send events to other statemachines using a `smxstate.send()` function of some sorts.
  - [ ] See what it takes to put the visualization onto node-red-dashboard
+ - [ ] Revisit the rendering process timeout of 10 seconds because [RasPi2 performance seems to be too low for the cat example](https://discourse.nodered.org/t/announcement-node-red-contrib-xstate-machine-flexible-state-machines-for-node-red/24262/6?u=sonntam)
