@@ -96,7 +96,7 @@ There are several state-transitions with guards, e.g. `[belly empty]` or `[belly
 
 ![Cat visualization](images/example-visualization_cat.png)
 
-Enter the following code snippet into a `smxstate` node or load the example flow [from here](examples/sm-cat-flow.json) into node-red to get the example started:
+Enter the following code snippet into a `smxstate` node or load the example flow [from here](examples/flows/sm-cat-flow.json) into node-red to get the example started:
 
 ```js
 // Import shorthands from xstate object
