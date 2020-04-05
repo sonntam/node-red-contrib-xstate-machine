@@ -7,7 +7,7 @@ var smxstateNode = require("../src/smxstate-node");
 
 helper.init(require.resolve('node-red'));
 
-describe('smxstate node', function() {
+describe('smxstate node with run-with-history example machine', function() {
 
     before(function(done){
         helper.startServer(done);
