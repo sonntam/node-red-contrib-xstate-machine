@@ -9,3 +9,4 @@ src/*.html
 src/*client*.js
 src/defaultStateMachine.js
 tmp/*
+jsconfig.json
