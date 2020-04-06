@@ -268,12 +268,13 @@ result = (function(__send__,__done__){
 			}
 		};
 
-		let dataChangedFcn = (context) => {
+		let dataChangedFcn = (context, previousContext) => {
 
 			// Output
 			node.send([[{
 				topic: "context",
-				payload: context
+				payload: context,
+				previous: previousContext
 			}]]);
 			
 			// Publish to editor
@@ -290,14 +291,8 @@ result = (function(__send__,__done__){
 
 		service
 			.onTransition( (state) => transitionFcn(state) )
-			.onChange( (context) => dataChangedFcn(context) )
+			.onChange( (context, previousContext) => dataChangedFcn(context, previousContext) )
 			.start();
-
-		// The transition function is immediately called after .start()
-		// because the statemachine transitions into its initial state.
-		// The context update function however does not get called, so we
-		// have to do it manually.
-		dataChangedFcn(service.state.context);
 	}
 
 	function getNodeParentPath(node) {
