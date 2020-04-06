@@ -34,7 +34,7 @@ In the following the usage of both will be explained to get you started.
 
 ![Node image](images/node.png)
 
-Within this node you will find a javascript editor similar to the function-node. Here you can define your state-machine in a (xstate-fashion)[https://xstate.js.org/docs/guides/machines.html]. The javascript code must end with a `return` that returns an object of the following form:
+Within this node you will find a javascript editor similar to the function-node. Here you can define your state-machine in a [xstate-fashion](https://xstate.js.org/docs/guides/machines.html). The javascript code must end with a `return` that returns an object of the following form:
 
 ```js
 return {
