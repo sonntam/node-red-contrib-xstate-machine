@@ -1,4 +1,3 @@
-
 // Available variables/objects/functions:
 // XState
 // - Machine
@@ -40,7 +39,7 @@ const resetCounter = (context, event) => {
   //  - node.log
   //  - node.warn
   //  - node.error
-  node.warn("RESET");
+  //node.warn("RESET");
 
   context.counter = 0;
 
@@ -55,7 +54,10 @@ const resetCounter = (context, event) => {
  * Activities
  */
 const doStuff = () => {
-  const interval = setInterval(() => node.warn('BEEP'), 1000);
+  // See https://xstate.js.org/docs/guides/activities.html
+  const interval = setInterval(() => {
+    node.send({ payload: 'BEEP' });
+  }, 1000);
   return () => clearInterval(interval);
 };
 
@@ -74,13 +76,13 @@ return {
           '': { target: 'reset', cond: 'maxValueReached' }
         },
         after: {
-          500: { target: 'count', actions: 'incrementCounter' }
+          1000: { target: 'count', actions: 'incrementCounter' }
         }
       },
       reset: {
         entry: 'resetCounter',
         after: {
-          '5000': { target: 'count' }
+          5000: { target: 'count' }
         },
         activities: 'doStuff'
       }
@@ -96,6 +98,6 @@ return {
   // Define listeners (can be an array of functions)
   //    Functions get called on every state/context update
   listeners: (data) => {
-    node.warn(data.state + ":" + data.context.counter);
+    //node.warn(data.state + ":" + data.context.counter);
   }
 };
