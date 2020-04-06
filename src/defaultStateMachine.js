@@ -30,25 +30,27 @@ const maxValueReached = (context, event) => {
 /**
  * Actions
  */
-const incrementCounter = (context, event) => {
-  context.counter += 1;
-};
+const incrementCounter = assign({
+  counter: (context, event) => context.counter + 1
+});
 
-const resetCounter = (context, event) => {
-  // Can send log messages via
-  //  - node.log
-  //  - node.warn
-  //  - node.error
-  //node.warn("RESET");
+const resetCounter = assign({
+  counter: (context, event) => {
+    // Can send log messages via
+    //  - node.log
+    //  - node.warn
+    //  - node.error
+    //node.warn("RESET");
 
-  context.counter = 0;
-
-  // Can send messages to the second outport
-  // Specify an array to send multiple messages
-  // at once
-  //  - node.send(msg)
-  node.send({ payload: "resetCounter" });
-};
+    // Can send messages to the second outport
+    // Specify an array to send multiple messages
+    // at once
+    //  - node.send(msg)
+    node.send({ payload: "resetCounter" });
+    
+    return 0;
+  }
+});
 
 /**
  * Activities
