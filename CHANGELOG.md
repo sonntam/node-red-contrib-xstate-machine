@@ -1,5 +1,13 @@
 # node-red-contrib-xstate-machine
 
+## 0.1.2
+
+### Patch Changes
+
+- a4ac0a6: Prevent double messaging about context on machine startup
+- 6750fba: Stop the default node from babbling too much
+- 4046931: Make default node use assign() action to set context
+
 ## 0.1.1
 
 ### Patch Changes

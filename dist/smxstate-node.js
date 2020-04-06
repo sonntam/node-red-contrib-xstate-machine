@@ -7,9 +7,9 @@ module.exports = function (RED) {
 	var immutable = require('immutable');
 	xstate.smcat  = require('../src/xstate-smcat');
 
-	//global.registeredNodeIDs = [];
 	var registeredNodeIDs = [];
 	var activeId = null;
+	var renderTimeoutMs = 20000;
 
 	function sendWrapper(node, sendFcn, _msgid, msgArr, cloneMsg) {
 		// Copied from function node
@@ -268,12 +268,13 @@ result = (function(__send__,__done__){
 			}
 		};
 
-		let dataChangedFcn = (context) => {
+		let dataChangedFcn = (context, previousContext) => {
 
 			// Output
 			node.send([[{
 				topic: "context",
-				payload: context
+				payload: context,
+				previous: previousContext
 			}]]);
 			
 			// Publish to editor
@@ -290,14 +291,8 @@ result = (function(__send__,__done__){
 
 		service
 			.onTransition( (state) => transitionFcn(state) )
-			.onChange( (context) => dataChangedFcn(context) )
+			.onChange( (context, previousContext) => dataChangedFcn(context, previousContext) )
 			.start();
-
-		// The transition function is immediately called after .start()
-		// because the statemachine transitions into its initial state.
-		// The context update function however does not get called, so we
-		// have to do it manually.
-		dataChangedFcn(service.state.context);
 	}
 
 	function getNodeParentPath(node) {
@@ -470,7 +465,7 @@ result = (function(__send__,__done__){
 					try {
 						// Render state machine using smcat
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
-						
+
 						// Render in separate process with 10s timeout
 						smcat.render(smcat_machine, (output) => {
 							let smcat_svg;
@@ -510,7 +505,7 @@ result = (function(__send__,__done__){
 									machineId: context.blueprint.get('id')
 								});
 							}, 100);
-						}, 10000, true);
+						}, renderTimeoutMs, true);
 						
 						// Save the last provied graph ID
 						activeId = req.params.id;
