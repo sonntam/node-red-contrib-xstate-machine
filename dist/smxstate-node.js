@@ -273,8 +273,7 @@ result = (function(__send__,__done__){
 			// Output
 			node.send([[{
 				topic: "context",
-				payload: context,
-				previous: previousContext
+				payload: context
 			}]]);
 			
 			// Publish to editor

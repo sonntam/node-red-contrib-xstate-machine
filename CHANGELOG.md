@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 0.1.3
+
+### Patch Changes
+
+- Removed previous context in context update message as it doesn't seem to work --> xstate
+
 ## 0.1.2
 
 ### Patch Changes
