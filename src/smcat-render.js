@@ -10,8 +10,110 @@ const smcatPath = path.resolve(
     )
 );
 
-function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
+function renderDotFcn(smcatStr, options) {
+    var buf = Buffer.alloc(0);
+    var errbuf = Buffer.alloc(0);
+    var idTimeout;
+    var terminated = false;
+    var logOutput = options.logOutput;
 
+    if( !smcatStr ) return null;
+
+    let smcatProc = spawn('node',[smcatPath, '-I', 'smcat', '-T', 'dot', '-o', '-']);
+    let dotProc   = spawn('dot',['-Tsvg', '-Kdot']);
+
+    smcatProc.stdout.on('data', (data) => {
+        if( terminated )
+            smcatProc.kill();
+        else
+            dotProc.stdin.write(data);
+    });
+
+    smcatProc.stderr.on('data', (data) => {
+        let str = data.toString('utf8');
+        if( !str.match(/Invalid asm\.js/si) ) {
+            if( logOutput )
+                console.error(`smcat stderr: ${str}`);
+
+            errbuf = Buffer.concat([errbuf, data]);
+        }
+    });
+
+    smcatProc.on('close', (code) => {
+
+        if( code !== 0 && logOutput )
+            console.log(`smcat renderer process exited with error code ${code}.`);
+        
+        if( !terminated )
+            dotProc.stdin.end();
+    });
+
+    dotProc.on('error', (err) => {
+        if( logOutput )
+            console.error('Failed to start "dot" process.');
+    })
+
+    dotProc.stdout.on('data', (data) => {
+        buf = Buffer.concat([buf, data]);
+    });
+
+    dotProc.stdout.on('end',  () => {
+        if( idTimeout ) {
+            clearTimeout(idTimeout);
+            idTimeout = null;
+        } 
+    });
+
+    dotProc.stderr.on('data', (data) => {
+        let str = data.toString('utf8');
+        if( logOutput )
+            console.error(`dot stderr: ${str}`);
+        
+        errbuf = Buffer.concat([errbuf, data]);
+    });
+
+    dotProc.on('close', (code) => {
+        if( idTimeout ) {
+            clearTimeout(idTimeout);
+            idTimeout = null;
+        } 
+
+        if( code !== 0 && logOutput )
+            console.log(`dot renderer process exited with error code ${code}.`);
+
+        if( options.onDone && typeof options.onDone === "function" && !terminated )
+            options.onDone({ 
+                data: code === 0 ? buf.toString('utf8') : null, 
+                code: code,
+                err:  code !== 0 ? errbuf.toString('utf8') : null
+            });
+        smcatProc.kill();
+        terminated = true;
+    });
+
+    smcatProc.stdin.write(Buffer.from(smcatStr));
+    smcatProc.stdin.end();
+
+    // Start timeout
+    if( options.timeoutMs ) {
+        idTimeout = setTimeout( () => {
+            if( logOutput )
+                console.error("Renderer process timeout. Terminating process.");
+
+            terminated = true;
+            smcatProc.kill();
+            dotProc.kill();
+
+            if( options.onDone && typeof options.onDone === "function" )
+                options.onDone(null);
+
+        }, options.timeoutMs)
+    }
+
+    return [smcatProc, dotProc];
+}
+
+function renderSMCatFcn(smcatStr, options) {
     var buf = Buffer.alloc(0);
     var errbuf = Buffer.alloc(0);
     var idTimeout;
@@ -19,7 +121,7 @@ function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
 
     if( !smcatStr ) return null;
 
-    const proc = spawn('node',[smcatPath, '-o', '-']);
+    let proc = spawn('node',[smcatPath, '-I', 'smcat', '-T', 'svg', '-o', '-']);
 
     proc.stdout.on('data', (data) => {
         buf = Buffer.concat([buf, data]);
@@ -79,6 +181,43 @@ function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
     }
 
     return proc;
+}
+
+function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
+
+    var buf = Buffer.alloc(0);
+    var errbuf = Buffer.alloc(0);
+    var idTimeout;
+    var terminated = false;
+
+    var defOptions = {
+        onDone: undefined,
+        timeoutMs: 20000,
+        logOutput: false,
+        renderer: 'smcat'
+    };
+
+    if( !smcatStr ) return null;
+
+    // Check input format
+    if( ondataFcn && typeof ondataFcn === "object" ) {
+        Object.assign(defOptions, ondataFcn);
+    } else {
+        Object.assign(defOptions, {
+            onDone: ondataFcn,
+            timeoutMs: timeoutMs,
+            logOutput: logOutput
+        });
+    }
+
+    switch( defOptions.renderer.toLowerCase() ) {
+        case 'smcat':
+            return renderSMCatFcn(smcatStr, defOptions);
+        case 'dot':
+            return renderDotFcn(smcatStr, defOptions);
+        default:
+            return null;
+    }
 }
 
 // These are functions that modify smcat svg output to improve the presentation
@@ -204,23 +343,36 @@ function postprocessSVG(svg) {
 
 function renderPostProcessingFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
     // This outputs a corrected svg
-    var fcnCallback;
     var oldCallback = ondataFcn;
-    
-    if( ondataFcn && typeof ondataFcn === "function" ) {
-        fcnCallback = (output) => {
+    var options = {}
 
-            // Modify output!
-            if( !!output && output.code === 0 ) 
-                output.data = postprocessSVG(output.data);
-
-            oldCallback(output);
+    if( !smcatStr ) return null;
+    if( ondataFcn ){
+        if(typeof ondataFcn === "object") {
+            Object.assign(options, ondataFcn);
+        } else if( typeof ondataFcn === "function ") {
+            options = {
+                onDone: ondataFcn,
+                timeoutMs: timeoutMs,
+                logOutput: logOutput
+            };
         }
+    } else {
+        return null;
     }
 
-    if( arguments.length > 1 ) arguments[1] = fcnCallback;
+    var oldCallback = options.onDone;
 
-    return renderFcn(...arguments);
+    options.onDone = (output) => {
+
+        // Modify output!
+        if( !!output && output.code === 0 ) 
+            output.data = postprocessSVG(output.data);
+
+        oldCallback(output);
+    }
+
+    return renderFcn(smcatStr, options);
 }
 
 module.exports = {

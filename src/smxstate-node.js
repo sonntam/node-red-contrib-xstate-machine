@@ -466,45 +466,50 @@ result = (function(__send__,__done__){
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
 
 						// Render in separate process with 10s timeout
-						smcat.render(smcat_machine, (output) => {
-							let smcat_svg;
+						smcat.render(smcat_machine, {
+							onDone: (output) => {
+								let smcat_svg;
 
-							if( !!output && output.code === 0 ) {
-								smcat_svg = output.data;
-							} else {
-								res.sendStatus(500);
-								if( !!output )
-									node.error(`Rendering of state machine failed: Render process returned error code ${output.code}: ${output.err}`);
-								else
-									node.error(`Rendering of state machine failed: Render process timed out.`);
-								
-								return;
-							}
+								if( !!output && output.code === 0 ) {
+									smcat_svg = output.data;
+								} else {
+									res.sendStatus(500);
+									if( !!output )
+										node.error(`Rendering of state machine failed: Render process returned error code ${output.code}: ${output.err}`);
+									else
+										node.error(`Rendering of state machine failed: Render process timed out.`);
+									
+									return;
+								}
 
-							smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
-							res.status(200).send(smcat_svg);
+								smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
+								res.status(200).send(smcat_svg);
 
-							// Send update for context/state
-							let context = node.context().xstate;
+								// Send update for context/state
+								let context = node.context().xstate;
 
-							setTimeout( () => {
-								RED.comms.publish("smxstate_transition",{
-									type: 'transition',
-									id: node.id,
-									state: makeStateObject(context.service.state),
-									machineId: context.blueprint.get('id')
-								});
-							}, 100);
+								setTimeout( () => {
+									RED.comms.publish("smxstate_transition",{
+										type: 'transition',
+										id: node.id,
+										state: makeStateObject(context.service.state),
+										machineId: context.blueprint.get('id')
+									});
+								}, 100);
 
-							setTimeout( () => {
-								RED.comms.publish("smxstate_transition",{
-									type: 'context',
-									id: node.id,
-									context: context.service.state.context,
-									machineId: context.blueprint.get('id')
-								});
-							}, 100);
-						}, renderTimeoutMs, true);
+								setTimeout( () => {
+									RED.comms.publish("smxstate_transition",{
+										type: 'context',
+										id: node.id,
+										context: context.service.state.context,
+										machineId: context.blueprint.get('id')
+									});
+								}, 100);
+							}, 
+							timeoutMs: renderTimeoutMs,
+							logOutput: true,
+							renderer: 'dot'
+						});
 						
 						// Save the last provied graph ID
 						activeId = req.params.id;
