@@ -1,0 +1,11 @@
+1d48331a.6cd23d/initial,
+1d48331a.6cd23d.count/atomic [label="count" type=regular],
+1d48331a.6cd23d.reset/atomic [label="reset" type=regular] :
+    entry / resetCounter()
+    do / doStuff();
+
+1d48331a.6cd23d/initial => 1d48331a.6cd23d.count/atomic;
+1d48331a.6cd23d.count/atomic => 1d48331a.6cd23d.reset/atomic : [maxValueReached];
+1d48331a.6cd23d.count/atomic => 1d48331a.6cd23d.count/atomic : after 1 s / incrementCounter();
+1d48331a.6cd23d.reset/atomic => 1d48331a.6cd23d.count/atomic : after 5 s;
+
