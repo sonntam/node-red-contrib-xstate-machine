@@ -15,7 +15,6 @@ function renderDotFcn(smcatStr, options) {
     var errbuf = Buffer.alloc(0);
     var idTimeout;
     var terminated = false;
-    var logOutput = options.logOutput;
 
     if( !smcatStr ) return null;
 
@@ -32,7 +31,7 @@ function renderDotFcn(smcatStr, options) {
     smcatProc.stderr.on('data', (data) => {
         let str = data.toString('utf8');
         if( !str.match(/Invalid asm\.js/si) ) {
-            if( logOutput )
+            if( options.logOutput )
                 console.error(`smcat stderr: ${str}`);
 
             errbuf = Buffer.concat([errbuf, data]);
@@ -41,7 +40,7 @@ function renderDotFcn(smcatStr, options) {
 
     smcatProc.on('close', (code) => {
 
-        if( code !== 0 && logOutput )
+        if( code !== 0 && options.logOutput )
             console.log(`smcat renderer process exited with error code ${code}.`);
         
         if( !terminated )
@@ -49,7 +48,7 @@ function renderDotFcn(smcatStr, options) {
     });
 
     dotProc.on('error', (err) => {
-        if( logOutput )
+        if( options.logOutput )
             console.error('Failed to start "dot" process.');
     })
 
@@ -66,7 +65,7 @@ function renderDotFcn(smcatStr, options) {
 
     dotProc.stderr.on('data', (data) => {
         let str = data.toString('utf8');
-        if( logOutput )
+        if( options.logOutput )
             console.error(`dot stderr: ${str}`);
         
         errbuf = Buffer.concat([errbuf, data]);
@@ -78,7 +77,7 @@ function renderDotFcn(smcatStr, options) {
             idTimeout = null;
         } 
 
-        if( code !== 0 && logOutput )
+        if( code !== 0 && options.logOutput )
             console.log(`dot renderer process exited with error code ${code}.`);
 
         if( options.onDone && typeof options.onDone === "function" && !terminated )
@@ -97,7 +96,7 @@ function renderDotFcn(smcatStr, options) {
     // Start timeout
     if( options.timeoutMs ) {
         idTimeout = setTimeout( () => {
-            if( logOutput )
+            if( options.logOutput )
                 console.error("Renderer process timeout. Terminating process.");
 
             terminated = true;
@@ -137,7 +136,7 @@ function renderSMCatFcn(smcatStr, options) {
     proc.stderr.on('data', (data) => {
         let str = data.toString('utf8');
         if( !str.match(/Invalid asm\.js/si) ) {
-            if( logOutput )
+            if( options.logOutput )
                 console.error(`smcat stderr: ${str}`);
 
             errbuf = Buffer.concat([errbuf, data]);
@@ -153,11 +152,11 @@ function renderSMCatFcn(smcatStr, options) {
             idTimeout = null;
         } 
 
-        if( code !== 0 && logOutput )
+        if( code !== 0 && options.logOutput )
             console.log(`smcat renderer process exited with error code ${code}.`);
 
-        if( ondataFcn && typeof ondataFcn === "function" && !terminated )
-            ondataFcn({ 
+        if( options.onDone  && typeof options.onDone  === "function" && !terminated )
+            options.onDone ({ 
                 data: code === 0 ? buf.toString('utf8') : null, 
                 code: code,
                 err:  code !== 0 ? errbuf.toString('utf8') : null
@@ -166,18 +165,18 @@ function renderSMCatFcn(smcatStr, options) {
     });
 
     // Start timeout
-    if( timeoutMs ) {
+    if( options.timeoutMs ) {
         idTimeout = setTimeout( () => {
-            if( logOutput )
+            if( options.logOutput )
                 console.error("Renderer process timeout. Terminating process.");
 
             terminated = true;
             proc.kill();
 
-            if( ondataFcn && typeof ondataFcn === "function" )
-                ondataFcn(null);
+            if( options.onDone && typeof options.onDone === "function" )
+                options.onDone(null);
 
-        }, timeoutMs)
+        }, options.timeoutMs)
     }
 
     return proc;

@@ -466,10 +466,12 @@ result = (function(__send__,__done__){
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
 
 						// Render in separate process with 10s timeout
+						console.time('render');
 						smcat.render(smcat_machine, {
 							onDone: (output) => {
 								let smcat_svg;
 
+								console.timeEnd('render');
 								if( !!output && output.code === 0 ) {
 									smcat_svg = output.data;
 								} else {
@@ -508,7 +510,7 @@ result = (function(__send__,__done__){
 							}, 
 							timeoutMs: renderTimeoutMs,
 							logOutput: true,
-							renderer: 'dot'
+							renderer: 'smcat'
 						});
 						
 						// Save the last provied graph ID
