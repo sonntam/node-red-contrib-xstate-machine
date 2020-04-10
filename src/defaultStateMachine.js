@@ -1,14 +1,13 @@
 // Available variables/objects/functions:
-// XState
-// - Machine
-// - interpret
-// - assign
-// - send
-// - sendParent
-// - spawn
-// - raise
-// - actions
-// - XState (all XState exports)
+// xstate
+// - .Machine
+// - .interpret
+// - .assign
+// - .send
+// - .sendParent
+// - .spawn
+// - .raise
+// - .actions
 //
 // Common
 // - setInterval, setTimeout, clearInterval, clearTimeout
@@ -17,6 +16,8 @@
 // - flow.get, flow.set
 // - env.get
 // - util
+
+const { assign } = xstate;
 
 // First define names guards, actions, ...
 
