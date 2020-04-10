@@ -68,7 +68,11 @@ module.exports = function (RED) {
 				sendUpdate: xstate.sendUpdate,
 				spawn: xstate.spawn,
 				after: xstate.after,
-				State: xstate.State
+				State: xstate.State,
+				interpret: xstate.interpret,
+				send: xstate.send,
+				sendParent: xstate.sendParent,
+				raise: xstate.raise
 			},
             RED: {
                 util: RED.util
