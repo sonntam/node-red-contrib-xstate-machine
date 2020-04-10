@@ -1,5 +1,12 @@
 # node-red-contrib-xstate-machine
 
+## 0.1.4
+
+### Patch Changes
+
+- 48b7eff: Fixed bug in default machine: Added missing assign function. Also updated the usable xstate functions within the vm.
+- bd26e46: Readme typo fixes
+
 ## 0.1.3
 
 ### Patch Changes
