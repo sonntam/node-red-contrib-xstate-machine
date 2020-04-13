@@ -11,7 +11,7 @@ const smcatPath = path.resolve(
     )
 );
 
-function renderDotFcn(smcatStr, options) {
+async function renderDotFcn(smcatStr, options) {
     var buf = Buffer.alloc(0);
     var errbuf = Buffer.alloc(0);
     var idTimeout;
@@ -72,23 +72,26 @@ function renderDotFcn(smcatStr, options) {
         errbuf = Buffer.concat([errbuf, data]);
     });
 
-    dotProc.on('close', (code) => {
-        if( idTimeout ) {
-            clearTimeout(idTimeout);
-            idTimeout = null;
-        } 
+    let promise = new Promise( (resolve,reject) => {
+        dotProc.on('close', (code) => {
+            if( idTimeout ) {
+                clearTimeout(idTimeout);
+                idTimeout = null;
+            } 
 
-        if( code !== 0 && options.logOutput )
-            console.log(`dot renderer process exited with error code ${code}.`);
+            if( code !== 0 && options.logOutput )
+                console.log(`dot renderer process exited with error code ${code}.`);
 
-        if( options.onDone && typeof options.onDone === "function" && !terminated )
-            options.onDone({ 
+            smcatProc.kill();
+            terminated = true;
+
+            resolve({ 
                 data: code === 0 ? buf.toString('utf8') : null, 
                 code: code,
                 err:  code !== 0 ? errbuf.toString('utf8') : null
             });
-        smcatProc.kill();
-        terminated = true;
+            
+        });
     });
 
     smcatProc.stdin.write(Buffer.from(smcatStr));
@@ -104,16 +107,16 @@ function renderDotFcn(smcatStr, options) {
             smcatProc.kill();
             dotProc.kill();
 
-            if( options.onDone && typeof options.onDone === "function" )
-                options.onDone(null);
+            /*if( options.onDone && typeof options.onDone === "function" )
+                options.onDone(null);*/
 
         }, options.timeoutMs)
     }
 
-    return [smcatProc, dotProc];
+    return await promise;
 }
 
-function renderSMCatFcn(smcatStr, options) {
+async function renderSMCatFcn(smcatStr, options) {
     var buf = Buffer.alloc(0);
     var errbuf = Buffer.alloc(0);
     var idTimeout;
@@ -147,22 +150,25 @@ function renderSMCatFcn(smcatStr, options) {
     proc.stdin.write(Buffer.from(smcatStr));
     proc.stdin.end();
 
-    proc.on('close', (code) => {
-        if( idTimeout ) {
-            clearTimeout(idTimeout);
-            idTimeout = null;
-        } 
+    let promise = new Promise((resolve, reject) => {
+        proc.on('close', (code) => {
+            if( idTimeout ) {
+                clearTimeout(idTimeout);
+                idTimeout = null;
+            } 
 
-        if( code !== 0 && options.logOutput )
-            console.log(`smcat renderer process exited with error code ${code}.`);
+            if( code !== 0 && options.logOutput )
+                console.log(`smcat renderer process exited with error code ${code}.`);
 
-        if( options.onDone  && typeof options.onDone  === "function" && !terminated )
-            options.onDone ({ 
-                data: code === 0 ? buf.toString('utf8') : null, 
-                code: code,
-                err:  code !== 0 ? errbuf.toString('utf8') : null
-            });
-
+            if( !terminated )
+                resolve({ 
+                    data: code === 0 ? buf.toString('utf8') : null, 
+                    code: code,
+                    err:  code !== 0 ? errbuf.toString('utf8') : null
+                });
+            else
+                resolve(null);
+        });
     });
 
     // Start timeout
@@ -173,27 +179,27 @@ function renderSMCatFcn(smcatStr, options) {
 
             terminated = true;
             proc.kill();
-
+/*
             if( options.onDone && typeof options.onDone === "function" )
-                options.onDone(null);
+                options.onDone(null);*/
 
         }, options.timeoutMs)
     }
 
-    return proc;
+    return await promise;
 }
 
-function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
+async function renderFcn(smcatStr, timeoutMs, logOutput, callback) {
 
     if( !smcatStr ) return null;
 
-    var options = normalizeOptions(...(arguments.splice(0,1)) );
+    var options = await normalizeOptions(...(Array.prototype.slice.call(arguments,1)) );
 
-    switch( defOptions.renderer.toLowerCase() ) {
+    switch( options.renderer.toLowerCase() ) {
         case 'smcat':
-            return renderSMCatFcn(smcatStr, options);
+            return await renderSMCatFcn(smcatStr, options);
         case 'dot':
-            return renderDotFcn(smcatStr, options);
+            return await renderDotFcn(smcatStr, options);
         default:
             return null;
     }
@@ -330,48 +336,48 @@ async function checkDot() {
     }
 }
 
-function normalizeOptions(args) {
+async function normalizeOptions(args) {
 
     let defOptions = {
         onDone: undefined,
         timeoutMs: 20000,
         logOutput: false,
-        renderer: ( checkDot() ? 'dot' : 'smcat' )
+        renderer: ( await checkDot() ? 'dot' : 'smcat' )
     };
 
     if( arguments.length > 0 ){
         if(typeof arguments[0] === "object") {
             Object.assign(defOptions, arguments[0]);
-        } else if( typeof arguments[0] === "function ") {
-            defOptions.onDone = shift(arguments);
-            if( arguments.length > 0 ) defOptions.timeoutMs = shift(arguments);
-            if( arguments.length > 0 ) defOptions.logOutput = shift(arguments);
+            if( arguments[1] && typeof arguments[1] === "function" ) defOptions.onDone = arguments[1];
+        } else {
+            // if( typeof arguments[0] === "function ") {
+            const [callback] = Array.prototype.slice.call(arguments,-1);
+            if( typeof callback === "function" ) {
+                defOptions.onDone = callback;
+                Array.prototype.pop.call(arguments);
+            } 
+
+            if( arguments.length > 0  && typeof arguments[0] === "number") defOptions.timeoutMs = Array.prototype.shift.call(arguments);
+            if( arguments.length > 0  && typeof arguments[0] === "boolean") defOptions.logOutput = Array.prototype.shift.call(arguments);
         }
     }
 
     return defOptions;
 }
 
-function renderPostProcessingFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
+async function renderPostProcessingFcn(smcatStr, timeoutMs, logOutput, callback) {
     // This outputs a corrected svg
     if( !smcatStr ) return null;
     
-    var options = normalizeOptions(...(arguments.splice(0,1)) );
+    var options = await normalizeOptions(...(Array.prototype.slice.call(arguments,1)) );
 
-    if( !options.onDone ) return null;
+    var output = await renderFcn(smcatStr, options);
 
-    var oldCallback = options.onDone;
+    // Modify output!
+    if( !!output && output.code === 0 )
+        output.data = postprocessSVG(output.data);
 
-    options.onDone = (output) => {
-
-        // Modify output!
-        if( !!output && output.code === 0 ) 
-            output.data = postprocessSVG(output.data);
-
-        oldCallback(output);
-    }
-
-    return renderFcn(smcatStr, options);
+    return output;
 }
 
 module.exports = {
