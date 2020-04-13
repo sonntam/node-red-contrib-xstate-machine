@@ -1,5 +1,13 @@
 # node-red-contrib-xstate-machine
 
+## 0.1.5
+
+### Patch Changes
+
+- 859d06a: Added some events to default machine
+- 7827d09: Fixed problem with initial state of compound states in visualization
+- 12ac1fd: Added some code for backwards compatibility to node-red 0.20.x
+
 ## 0.1.4
 
 ### Patch Changes
