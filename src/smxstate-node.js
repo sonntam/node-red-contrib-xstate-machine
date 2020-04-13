@@ -294,7 +294,7 @@ result = (function(__send__,__done__){
 
 		service
 			.onTransition( (state) => transitionFcn(state) )
-			.onChange( (context, previousContext) => dataChangedFcn(context, previousContext) )
+			.onChange( (context, previousContext) => { if( context !== previousContext ) dataChangedFcn(context, previousContext); } )
 			.start();
 	}
 
