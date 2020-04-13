@@ -1,5 +1,15 @@
 # node-red-contrib-xstate-machine
 
+## 0.2.0
+
+### Minor Changes
+
+- 565dfe9: Fixed "context" msg being sent if data did not change
+
+### Patch Changes
+
+- 3a2859d: Fixed whitespace in do/ action labels in visualization
+
 ## 0.1.5
 
 ### Patch Changes
