@@ -72,22 +72,35 @@ return {
     context: {
       counter: 0
     },
-    initial: 'count',
+    initial: 'run',
     states: {
-      count: {
-        on: {
-          '': { target: 'reset', cond: 'maxValueReached' }
+      run: {
+        initial: 'count',
+        states: {
+          count: {
+            on: {
+              '': { target: 'reset', cond: 'maxValueReached' }
+            },
+            after: {
+              1000: { target: 'count', actions: 'incrementCounter' }
+            }
+          },
+          reset: {
+            entry: 'resetCounter',
+            after: {
+              5000: { target: 'count' }
+            },
+            activities: 'doStuff'
+          }
         },
-        after: {
-          1000: { target: 'count', actions: 'incrementCounter' }
+        on: {
+          PAUSE: 'pause'
         }
       },
-      reset: {
-        entry: 'resetCounter',
-        after: {
-          5000: { target: 'count' }
-        },
-        activities: 'doStuff'
+      pause: {
+        on: {
+          RESUME: 'run'
+        }
       }
     }
   },
