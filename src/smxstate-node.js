@@ -294,7 +294,7 @@ result = (function(__send__,__done__){
 
 		service
 			.onTransition( (state) => transitionFcn(state) )
-			.onChange( (context, previousContext) => dataChangedFcn(context, previousContext) )
+			.onChange( (context, previousContext) => { if( context !== previousContext ) dataChangedFcn(context, previousContext); } )
 			.start();
 	}
 
@@ -407,7 +407,7 @@ result = (function(__send__,__done__){
 		}
 
 		node.on('input', function (msg, send, done) {
-
+			let hasDone = ( done ? typeof done === "function" : false );
 			try {
 				if( msg.hasOwnProperty("topic") && typeof msg.topic === "string" ) {
 					if( msg.topic === "reset" ) {
@@ -419,9 +419,10 @@ result = (function(__send__,__done__){
 				else
 					throw( "No event (msg.topic) is defined." );
 
-				done();
+				if( hasDone ) done();
 			} catch(err) {
-				done(err);
+				if( hasDone ) done(err);
+				else node.error(err);
 			}
 		});
 
@@ -438,7 +439,7 @@ result = (function(__send__,__done__){
 
 			registeredNodeIDs = registeredNodeIDs.filter(e => e.id != this.id);
 
-			done();
+			if( done && typeof done === "function" ) done();
         });
 	}
 	RED.nodes.registerType('smxstate', StateMachineNode);
