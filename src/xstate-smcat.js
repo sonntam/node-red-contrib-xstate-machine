@@ -86,13 +86,26 @@ function createChildrenStates(parentState,level) {
 
     // Initial state for compound/parallel state
     if( statesDef.length > 0 && parentState.type !== "parallel" ) {
-        statesDef.unshift(parentState.id + typeSep + "initial");
-        transitionsDef = statesDef[0] + " => " + getStateName( parentState.initialStateNodes[0] ) + ";" + transitionsDef;
+        let rootNode = getClosestChildState( parentState, parentState.initialStateNodes[0] );
+        if( rootNode ) {
+            statesDef.unshift(parentState.id + typeSep + "initial");
+            transitionsDef = statesDef[0] + " => " + getStateName(rootNode) + ";" + transitionsDef;
+        }
     }
     return  { 
         states: statesDef.length > 0 ? statesDef.join(',\n') + ";" : null,
         transitions: transitionsDef.length > 0 ? transitionsDef : null
      };
+}
+
+function getClosestChildState(parent, child) {
+
+    if( !(child.parent) ) return null;
+
+    if( child.parent === parent ) // Found it
+        return child;
+    
+    return getClosestChildState(parent, child.parent);
 }
 
 function convertMilliseconds(ms) {
