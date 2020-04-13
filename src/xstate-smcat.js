@@ -25,19 +25,19 @@ function getStateCode(state) {
     if( state.onEntry && state.onEntry.length > 0 ) {
         let actionDef = getStateAction( state.onEntry );
         if( actionDef )
-            code.push( "entry / " + actionDef );
+            code.push( "entry/ " + actionDef );
     }
 
     if( state.activities && state.activities.length > 0 ) {
         let actionDef = getStateAction( state.activities );
         if( actionDef )
-            code.push( "do / " + actionDef );
+            code.push( "do/ " + actionDef );
     }
 
     if( state.onExit && state.onExit.length > 0 ) {
         let actionDef = getStateAction( state.onExit );
         if( actionDef )
-            code.push( "exit / " + actionDef );
+            code.push( "exit/ " + actionDef );
     }
 
     return code.join('\n');
