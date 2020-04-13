@@ -36,6 +36,7 @@
     }
   },
   "dependencies": {
+    "command-exists-promise": "^2.0.2",
     "immutable": "^4.0.0-rc.12",
     "indent-string": "^4.0.0",
     "jsdom": "^16.2.2",

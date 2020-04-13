@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const { JSDOM } = require("jsdom");
+const commandExists = require('command-exists-promise');
 
 const smcatPath = path.resolve(
     path.join(
@@ -184,36 +185,15 @@ function renderSMCatFcn(smcatStr, options) {
 
 function renderFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
 
-    var buf = Buffer.alloc(0);
-    var errbuf = Buffer.alloc(0);
-    var idTimeout;
-    var terminated = false;
-
-    var defOptions = {
-        onDone: undefined,
-        timeoutMs: 20000,
-        logOutput: false,
-        renderer: 'smcat'
-    };
-
     if( !smcatStr ) return null;
 
-    // Check input format
-    if( ondataFcn && typeof ondataFcn === "object" ) {
-        Object.assign(defOptions, ondataFcn);
-    } else {
-        Object.assign(defOptions, {
-            onDone: ondataFcn,
-            timeoutMs: timeoutMs,
-            logOutput: logOutput
-        });
-    }
+    var options = normalizeOptions(...(arguments.splice(0,1)) );
 
     switch( defOptions.renderer.toLowerCase() ) {
         case 'smcat':
-            return renderSMCatFcn(smcatStr, defOptions);
+            return renderSMCatFcn(smcatStr, options);
         case 'dot':
-            return renderDotFcn(smcatStr, defOptions);
+            return renderDotFcn(smcatStr, options);
         default:
             return null;
     }
@@ -340,25 +320,45 @@ function postprocessSVG(svg) {
     return dom.serialize();
 }
 
+async function checkDot() {
+    // Check if 'dot' program is on the path
+    try {
+        return commandExists('dot');
+    }
+    catch(err) {
+        return false;
+    }
+}
+
+function normalizeOptions(args) {
+
+    let defOptions = {
+        onDone: undefined,
+        timeoutMs: 20000,
+        logOutput: false,
+        renderer: ( checkDot() ? 'dot' : 'smcat' )
+    };
+
+    if( arguments.length > 0 ){
+        if(typeof arguments[0] === "object") {
+            Object.assign(defOptions, arguments[0]);
+        } else if( typeof arguments[0] === "function ") {
+            defOptions.onDone = shift(arguments);
+            if( arguments.length > 0 ) defOptions.timeoutMs = shift(arguments);
+            if( arguments.length > 0 ) defOptions.logOutput = shift(arguments);
+        }
+    }
+
+    return defOptions;
+}
+
 function renderPostProcessingFcn(smcatStr, ondataFcn, timeoutMs, logOutput) {
     // This outputs a corrected svg
-    var oldCallback = ondataFcn;
-    var options = {}
-
     if( !smcatStr ) return null;
-    if( ondataFcn ){
-        if(typeof ondataFcn === "object") {
-            Object.assign(options, ondataFcn);
-        } else if( typeof ondataFcn === "function ") {
-            options = {
-                onDone: ondataFcn,
-                timeoutMs: timeoutMs,
-                logOutput: logOutput
-            };
-        }
-    } else {
-        return null;
-    }
+    
+    var options = normalizeOptions(...(arguments.splice(0,1)) );
+
+    if( !options.onDone ) return null;
 
     var oldCallback = options.onDone;
 
