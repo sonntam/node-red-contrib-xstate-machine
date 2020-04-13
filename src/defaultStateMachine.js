@@ -86,7 +86,7 @@ return {
             }
           },
           reset: {
-            entry: 'resetCounter',
+            exit: 'resetCounter',
             after: {
               5000: { target: 'count' }
             },
