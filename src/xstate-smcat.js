@@ -25,19 +25,19 @@ function getStateCode(state) {
     if( state.onEntry && state.onEntry.length > 0 ) {
         let actionDef = getStateAction( state.onEntry );
         if( actionDef )
-            code.push( "entry / " + actionDef );
+            code.push( "entry/ " + actionDef );
     }
 
     if( state.activities && state.activities.length > 0 ) {
         let actionDef = getStateAction( state.activities );
         if( actionDef )
-            code.push( "do / " + actionDef );
+            code.push( "do/ " + actionDef );
     }
 
     if( state.onExit && state.onExit.length > 0 ) {
         let actionDef = getStateAction( state.onExit );
         if( actionDef )
-            code.push( "exit / " + actionDef );
+            code.push( "exit/ " + actionDef );
     }
 
     return code.join('\n');
@@ -86,13 +86,26 @@ function createChildrenStates(parentState,level) {
 
     // Initial state for compound/parallel state
     if( statesDef.length > 0 && parentState.type !== "parallel" ) {
-        statesDef.unshift(parentState.id + typeSep + "initial");
-        transitionsDef = statesDef[0] + " => " + getStateName( parentState.initialStateNodes[0] ) + ";" + transitionsDef;
+        let rootNode = getClosestChildState( parentState, parentState.initialStateNodes[0] );
+        if( rootNode ) {
+            statesDef.unshift(parentState.id + typeSep + "initial");
+            transitionsDef = statesDef[0] + " => " + getStateName(rootNode) + ";" + transitionsDef;
+        }
     }
     return  { 
         states: statesDef.length > 0 ? statesDef.join(',\n') + ";" : null,
         transitions: transitionsDef.length > 0 ? transitionsDef : null
      };
+}
+
+function getClosestChildState(parent, child) {
+
+    if( !(child.parent) ) return null;
+
+    if( child.parent === parent ) // Found it
+        return child;
+    
+    return getClosestChildState(parent, child.parent);
 }
 
 function convertMilliseconds(ms) {

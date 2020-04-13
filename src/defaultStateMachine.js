@@ -1,14 +1,13 @@
 // Available variables/objects/functions:
-// XState
-// - Machine
-// - interpret
-// - assign
-// - send
-// - sendParent
-// - spawn
-// - raise
-// - actions
-// - XState (all XState exports)
+// xstate
+// - .Machine
+// - .interpret
+// - .assign
+// - .send
+// - .sendParent
+// - .spawn
+// - .raise
+// - .actions
 //
 // Common
 // - setInterval, setTimeout, clearInterval, clearTimeout
@@ -17,6 +16,8 @@
 // - flow.get, flow.set
 // - env.get
 // - util
+
+const { assign } = xstate;
 
 // First define names guards, actions, ...
 
@@ -71,22 +72,35 @@ return {
     context: {
       counter: 0
     },
-    initial: 'count',
+    initial: 'run',
     states: {
-      count: {
-        on: {
-          '': { target: 'reset', cond: 'maxValueReached' }
+      run: {
+        initial: 'count',
+        states: {
+          count: {
+            on: {
+              '': { target: 'reset', cond: 'maxValueReached' }
+            },
+            after: {
+              1000: { target: 'count', actions: 'incrementCounter' }
+            }
+          },
+          reset: {
+            exit: 'resetCounter',
+            after: {
+              5000: { target: 'count' }
+            },
+            activities: 'doStuff'
+          }
         },
-        after: {
-          1000: { target: 'count', actions: 'incrementCounter' }
+        on: {
+          PAUSE: 'pause'
         }
       },
-      reset: {
-        entry: 'resetCounter',
-        after: {
-          5000: { target: 'count' }
-        },
-        activities: 'doStuff'
+      pause: {
+        on: {
+          RESUME: 'run'
+        }
       }
     }
   },

@@ -1,5 +1,30 @@
 # node-red-contrib-xstate-machine
 
+## 0.2.0
+
+### Minor Changes
+
+- 565dfe9: Fixed "context" msg being sent if data did not change
+
+### Patch Changes
+
+- 3a2859d: Fixed whitespace in do/ action labels in visualization
+
+## 0.1.5
+
+### Patch Changes
+
+- 859d06a: Added some events to default machine
+- 7827d09: Fixed problem with initial state of compound states in visualization
+- 12ac1fd: Added some code for backwards compatibility to node-red 0.20.x
+
+## 0.1.4
+
+### Patch Changes
+
+- 48b7eff: Fixed bug in default machine: Added missing assign function. Also updated the usable xstate functions within the vm.
+- bd26e46: Readme typo fixes
+
 ## 0.1.3
 
 ### Patch Changes

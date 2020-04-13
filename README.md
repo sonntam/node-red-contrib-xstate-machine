@@ -9,6 +9,10 @@ The goal of this package is to provide an easy yet flexible and customizable way
 
 <p align="center"><img src="images/example-visualization.png" title="Logo"></p>
 
+## Recent changes
+
+See the [changelog](CHANGELOG.md) for an overview over the available versions and changes.
+
 ## Introduction
 
 The idea for this package is based on [node-red-contrib-finite-statemachine](https://github.com/lutzer/node-red-contrib-finite-statemachine) which was a very good starting point for me, but lacked some functionality that I wanted. If you only need to model simple state machines without guards, actions, time-based transitions, compund or parallel states this is the library you should go to!
@@ -219,7 +223,7 @@ This will give you a state machine to play with. It incorporates actions, delaye
 ## Development
 
 * Install dependencies using `npm install`
-* Trigger the build tool-chain using `npm run devbuild` to create a development build version that is easy to debug. If you use Visual Studio Code for development you can use the provided launch.json to run a node-red environment where you can quickly test the node.
+* Trigger the build tool-chain using `npm run devbuild` to create a development build version that is easy to debug. If you use Visual Studio Code for development you can use the provided launch.json to run a node-red environment where you can quickly test the node. To use it first create a dir called `./tmp` in this packages root dir and then change to it. Then run `npm install ..` to create a link to your working copy of the package for the node-red environment.
 * Running `npm run build` will create deployable production output in the `./dist` directory.
 
 ## Acknowledgements
