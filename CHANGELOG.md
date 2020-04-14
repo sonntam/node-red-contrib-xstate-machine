@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 0.2.1
+
+### Patch Changes
+
+- 634cc0a: Fixed firefox/opera/edge incompatibility issue
+
 ## 0.2.0
 
 ### Minor Changes
