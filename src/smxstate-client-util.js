@@ -112,7 +112,7 @@ RED.smxstate = (function() {
         var currentViewBoxCfg;
         try {
             currentViewBoxCfg = svgElement.getAttribute("viewBox");
-            currentViewBoxCfg = currentViewBoxCfg.split(/[\n\r\s]+/gis);
+            currentViewBoxCfg = currentViewBoxCfg.split(/[\n\r\s]+/gi);
             if( Array.isArray( currentViewBoxCfg ) && currentViewBoxCfg.length == 4 ) {
                 currentViewBoxCfg = currentViewBoxCfg.map( e => parseFloat(e) );
                 if( currentViewBoxCfg.some( e => !Number.isFinite(e)) )
