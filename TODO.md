@@ -11,11 +11,12 @@ TODO
  - [ ] Add checkbox to enable/disable state chart animation
  - [ ] Create more tests
  - [ ] Check if the user can overutilize the node-red server and do something about it
- - [ ] Check browser compatibility
-   - [x] Google chrome
-   - [ ] IE
-   - [ ] Firefox
-   - [ ] Opera
+ - [x] Check browser compatibility
+   - [x] Google chrome (80.0.3987.149)
+   - ❌ IE 11.719 - not loading correctly
+   - [x] Edge (44.18362.449.0)
+   - [x] Firefox (75.0)
+   - [x] Opera (67.0.3575.137)
    - [ ] Safari
  - [ ] Update the editor UI sidebar when machine is added/deleted accordingly
  - [ ] Write more examples
@@ -23,3 +24,4 @@ TODO
  - [ ] Maybe provide a third output that can send events to other statemachines using a `smxstate.send()` function of some sorts.
  - [ ] See what it takes to put the visualization onto node-red-dashboard
  - [ ] Revisit the rendering process timeout of 10 seconds because [RasPi2 performance seems to be too low for the cat example](https://discourse.nodered.org/t/announcement-node-red-contrib-xstate-machine-flexible-state-machines-for-node-red/24262/6?u=sonntam)
+ - [ ] Implement caching for the visualization graphics

@@ -188,7 +188,7 @@ RED.smxstate = (function() {
         }
     }
 
-    function displayFcn() {
+    function displayFcn(forceRedraw = false) {
         idObj = getCurrentlySelectedNodeId();
         
         // Clear graphics and get a new one
@@ -207,6 +207,7 @@ RED.smxstate = (function() {
         $.ajax({
             url: "smxstate/"+idObj.id+"/getgraph",
             type:"POST",
+            data: { forceRedraw: forceRedraw },
             success: function(resp) {
                 $('#red-ui-sidebar-smxstate-spinner').remove();
                 RED.notify(`Successfully rendered state-graph for ${idObj.label}`,{type:"success",id:"smxstate"});
@@ -319,7 +320,7 @@ RED.smxstate = (function() {
                                 '<i class="fa fa-refresh"></i>',
                                 '&nbsp;<span>refresh graph</span>'
                             )
-                            .click(() => { RED.smxstate.display(); })
+                            .click(() => { RED.smxstate.display(true); })
                         )
                     )
             );
@@ -417,6 +418,25 @@ RED.smxstate = (function() {
         RED.view.reveal(idObj.rootId);
     }
 
+    function setRendererFcn(renderer) {
+        switch( renderer.toLowerCase() ) {
+            case 'dot':
+                RED.settings.set('smxstate',{renderer: 'dot'});
+                break;
+            case 'smcat':
+                RED.settings.set('smxstate',{renderer: 'smcat'});
+                break;
+            default:
+                return;
+        }
+    }
+
+    function setRenderTimeoutFcn() {
+        let timeoutMs = 20000;
+
+        RED.settings.set('smxstate',{renderTimeoutMs: timeoutMs});
+    }
+
     return {
         init: initFcn,
         display: displayFcn,
@@ -427,6 +447,8 @@ RED.smxstate = (function() {
         animate: animateFcn,
         updateContext: updateContextFcn,
         revealRoot: revealRootFcn,
-        reveal: revealFcn
+        reveal: revealFcn,
+        setRenderer: setRendererFcn,
+        setRenderTimeout: setRenderTimeoutFcn
     };
 })();

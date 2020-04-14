@@ -444,6 +444,9 @@ result = (function(__send__,__done__){
 	}
 	RED.nodes.registerType('smxstate', StateMachineNode);
 
+	// Do one time init tasks
+	smcat.init(RED);
+
 	RED.httpAdmin.get("/smxstate/:method", RED.auth.needsPermission("smxstate.read"), function(req,res) {
 		switch(req.params.method) {
 			case 'getnodes':
@@ -470,10 +473,16 @@ result = (function(__send__,__done__){
 						// Render state machine using smcat
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
 
-						// Render in separate process with 10s timeout
-						smcat.render(smcat_machine, (output) => {
+						// Render in separate process with timeout
+						console.time('render');
+						smcat.render(smcat_machine, {
+							timeoutMs: renderTimeoutMs,
+							logOutput: true,
+							forceRedraw: req.body.hasOwnProperty("forceRedraw") ? req.body.forceRedraw === "true" : false
+						}).then( (output) => {
 							let smcat_svg;
 
+							console.timeEnd('render');
 							if( !!output && output.code === 0 ) {
 								smcat_svg = output.data;
 							} else {
@@ -509,7 +518,11 @@ result = (function(__send__,__done__){
 									machineId: context.blueprint.get('id')
 								});
 							}, 100);
-						}, renderTimeoutMs, true);
+						}).catch((err) => {
+								// Rendering was rejected
+								res.sendStatus(500);
+								node.error(`Rendering of state machine failed: Render process returned error: ${err}`);
+						});
 						
 						// Save the last provied graph ID
 						activeId = req.params.id;

@@ -1,7 +1,11 @@
-const { spawn } = require('child_process');
-const path = require('path');
-const { JSDOM } = require("jsdom");
+const { spawn }     = require('child_process');
+const path          = require('path');
+const { JSDOM }     = require("jsdom");
 const commandExists = require('command-exists-promise');
+
+const cache         = require('../src/smcat-render-cache');
+
+var renderTTLSeconds = 3600*24*28; // 4 weeks
 
 const smcatPath = path.resolve(
     path.join(
@@ -10,6 +14,16 @@ const smcatPath = path.resolve(
         ),'..','bin','smcat'
     )
 );
+
+let RED = null;
+
+function initFcn(pRED) {
+    // Save reference to RED for future reference
+    RED = pRED;
+    
+
+    //TODO: Do some cache cleanup if necessary
+}
 
 async function renderDotFcn(smcatStr, options) {
     var buf = Buffer.alloc(0);
@@ -342,7 +356,8 @@ async function normalizeOptions(args) {
         onDone: undefined,
         timeoutMs: 20000,
         logOutput: false,
-        renderer: ( await checkDot() ? 'dot' : 'smcat' )
+        renderer: ( await checkDot() ? 'dot' : 'smcat' ),
+        forceRedraw: false
     };
 
     if( arguments.length > 0 ){
@@ -371,16 +386,27 @@ async function renderPostProcessingFcn(smcatStr, timeoutMs, logOutput, callback)
     
     var options = await normalizeOptions(...(Array.prototype.slice.call(arguments,1)) );
 
+    if( !options.forceRedraw  && RED ) {
+        let cached = await cache.getCachedRendering(RED, smcatStr);
+        if( cached ) return cached;
+    }
+
     var output = await renderFcn(smcatStr, options);
 
     // Modify output!
-    if( !!output && output.code === 0 )
+    if( !!output && output.code === 0 ) {
         output.data = postprocessSVG(output.data);
+
+        // Cache this render
+        await cache.cacheRendering(RED, smcatStr, output, renderTTLSeconds );   
+    }
 
     return output;
 }
 
 module.exports = {
+    init: initFcn,
     renderRaw: renderFcn,
-    render: renderPostProcessingFcn
+    render: renderPostProcessingFcn,
+    renderTTLSeconds
 };

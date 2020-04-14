@@ -444,6 +444,9 @@ result = (function(__send__,__done__){
 	}
 	RED.nodes.registerType('smxstate', StateMachineNode);
 
+	// Do one time init tasks
+	smcat.init(RED);
+
 	RED.httpAdmin.get("/smxstate/:method", RED.auth.needsPermission("smxstate.read"), function(req,res) {
 		switch(req.params.method) {
 			case 'getnodes':
@@ -474,7 +477,8 @@ result = (function(__send__,__done__){
 						console.time('render');
 						smcat.render(smcat_machine, {
 							timeoutMs: renderTimeoutMs,
-							logOutput: true
+							logOutput: true,
+							forceRedraw: req.body.hasOwnProperty("forceRedraw") ? req.body.forceRedraw === "true" : false
 						}).then( (output) => {
 							let smcat_svg;
 
