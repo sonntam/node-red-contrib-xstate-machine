@@ -17,7 +17,7 @@ TODO
    - [x] Edge (44.18362.449.0)
    - [x] Firefox (75.0)
    - [x] Opera (67.0.3575.137)
-   - [ ] Safari
+   - [x] Safari (13.1, thanks @dceejay)
  - [ ] Update the editor UI sidebar when machine is added/deleted accordingly
  - [ ] Write more examples
  - [ ] Implement functionality to be able to open the state-machine visualization in a new window
