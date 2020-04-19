@@ -11,7 +11,6 @@ module.exports = function (RED) {
 
 	var registeredNodeIDs = [];
 	var activeId = null;
-	var renderTimeoutMs = 20000;
 
 	function sendWrapper(node, sendFcn, _msgid, msgArr, cloneMsg) {
 		// Copied from function node
@@ -514,54 +513,61 @@ result = (function(__send__,__done__){
 
 						// Render in separate process with timeout
 						console.time('render');
-						smcat.render(smcat_machine, {
-							timeoutMs: renderTimeoutMs,
-							logOutput: true,
-							forceRedraw: req.body.hasOwnProperty("forceRedraw") ? req.body.forceRedraw === "true" : false
-						}).then( (output) => {
-							let smcat_svg;
 
-							console.timeEnd('render');
-							if( !!output && output.code === 0 ) {
-								smcat_svg = output.data;
-							} else {
-								res.sendStatus(500);
-								if( !!output )
-									node.error(`Rendering of state machine failed: Render process returned error code ${output.code}: ${output.err}`);
-								else
-									node.error(`Rendering of state machine failed: Render process timed out.`);
-								
-								return;
-							}
+						(async () => {
+							try {
 
-							smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
-							res.status(200).send(smcat_svg);
+								let output = await smcat.render(smcat_machine, {
+									timeoutMs: Number.parseInt(RED.smxstate.settings.get('renderTimeoutMs')),
+									renderer: RED.smxstate.settings.get('renderer'),
+									logOutput: true,
+									forceRedraw: req.body.hasOwnProperty("forceRedraw") ? req.body.forceRedraw === "true" : false
+								});
+							
+								let smcat_svg;
 
-							// Send update for context/state
-							let context = node.context().xstate;
+								console.timeEnd('render');
+								if( !!output && output.code === 0 ) {
+									smcat_svg = output.data;
+								} else {
+									res.sendStatus(500);
+									if( !!output )
+										node.error(`Rendering of state machine failed: Render process returned error code ${output.code}: ${output.err}`);
+									else
+										node.error(`Rendering of state machine failed: Render process timed out.`);
+									
+									return;
+								}
 
-							setTimeout( () => {
+								smcat_svg = smcat_svg.match(/<svg.*?>.*?<\/svg>/si)[0];
+								res.status(200).send(smcat_svg);
+
+								// Send update for context/state
+								let context = node.context().xstate;
+
+								await util.promisify(setTimeout)(100);
+
 								RED.comms.publish("smxstate_transition",{
 									type: 'transition',
 									id: node.id,
 									state: makeStateObject(context.service.state),
 									machineId: context.blueprint.get('id')
 								});
-							}, 100);
 
-							setTimeout( () => {
+								await util.promisify(setTimeout)(100);
+
 								RED.comms.publish("smxstate_transition",{
 									type: 'context',
 									id: node.id,
 									context: context.service.state.context,
 									machineId: context.blueprint.get('id')
 								});
-							}, 100);
-						}).catch((err) => {
-								// Rendering was rejected
-								res.sendStatus(500);
-								node.error(`Rendering of state machine failed: Render process returned error: ${err}`);
-						});
+							} catch(err) {
+									// Rendering was rejected
+									res.sendStatus(500);
+									node.error(`Rendering of state machine failed: Render process returned error: ${err}`);
+							}
+						})();
 						
 						// Save the last provied graph ID
 						activeId = req.params.id;
