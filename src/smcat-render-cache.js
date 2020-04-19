@@ -2,6 +2,7 @@ const fs            = require('fs')
 const util          = require('util');
 const crypto        = require('crypto');
 const path          = require('path');
+const clone         = require('clone');
 
 async function getCache(RED) {
     let settings = RED.settings.get('smxstate');
@@ -15,7 +16,7 @@ async function getCache(RED) {
 }
 
 async function setCache(RED, cache) {
-    await RED.settings.set('smxstate', { cache: cache });
+    await RED.settings.set('smxstate', { cache: clone(cache) });
 }
 
 function getCacheEntryIdxFromHash(cache, hash) {
