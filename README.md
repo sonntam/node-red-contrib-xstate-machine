@@ -70,6 +70,10 @@ There are a number of buttons available to control the editor view/control the m
  - Reset button: This resets the current machine instance to its initial state and data context.
  - Refresh graph button: This redraws the visualization manually (useful e.g. if the instance was changed on the server by another user or in a separate editor).
 
+Also there are some settings that affect how the state graph is rendered. 
+ - With the `Renderer:` dropdown you can select the default `smcat` renderer. For more performance you can also use the native graphviz `dot` renderer if it is available on your system. In order to be able to select it the `dot` command must be available in the environment node-red is running in.
+ - The `Render timeout in ms:` sets the maximum time a rendering may take to render. If you run on slow hardware you can crank up the value. Don't worry: The renderings are cached and only need to be redrawn if something changes. Else they are taken from the cache.
+
 ## Example flows
 
 ### Simple statemachine with data object
