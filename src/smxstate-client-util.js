@@ -330,7 +330,6 @@ let smxstateUtilExports = (function() {
                         .append(
                             $('<select id="red-ui-sidebar-smxstate-settings-renderer">')
                                 .change( (ev) => {
-                                    debugger;
                                     RED.smxstate.settings.set('renderer', ev.target.value);
                                 })
                         ),
@@ -343,7 +342,6 @@ let smxstateUtilExports = (function() {
                             $('<input type="text" id="red-ui-sidebar-smxstate-settings-renderTimeoutMs">')
                                 .css("width", "40px")
                                 .change( (ev) => { 
-                                    debugger; 
                                     try {
                                         let number = Number.parseInt(ev.target.value);
                                         if( Number.isNaN(number) || number <= 0 ) throw("Render timeout must be a strictly positive integer.")
