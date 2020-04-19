@@ -58,7 +58,7 @@ function removeCacheEntry(cache, entry) {
 function addCacheEntry(cache, hash, file, ttl) {
     // Write new cache entry
     cache.push({
-        expire: Date.now() + ttl,
+        expire: Date.now() + ttl*1000,
         file: file,
         hash: hash
     });
