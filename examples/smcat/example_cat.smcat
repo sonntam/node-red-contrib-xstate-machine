@@ -1,0 +1,22 @@
+b2858986.fe7e48/initial,
+b2858986.fe7e48.sleep/atomic [label="sleep" type=regular],
+b2858986.fe7e48.meow/atomic [label="meow" type=regular] :
+    do/ meow() digest(),
+b2858986.fe7e48.play/atomic [label="play" type=regular] :
+    do/ digest(),
+b2858986.fe7e48.eat/atomic [label="eat" type=regular] :
+    do/ eat();
+
+b2858986.fe7e48/initial => b2858986.fe7e48.sleep/atomic;
+b2858986.fe7e48.sleep/atomic => b2858986.fe7e48.meow/atomic : wake up;
+b2858986.fe7e48.meow/atomic => b2858986.fe7e48.play/atomic : given toy [belly not empty];
+b2858986.fe7e48.meow/atomic => b2858986.fe7e48.eat/atomic : given food;
+b2858986.fe7e48.meow/atomic => b2858986.fe7e48.meow/atomic [type=internal] : digested / updateBelly();
+b2858986.fe7e48.play/atomic => b2858986.fe7e48.sleep/atomic : tired;
+b2858986.fe7e48.play/atomic => b2858986.fe7e48.sleep/atomic : bored;
+b2858986.fe7e48.play/atomic => b2858986.fe7e48.play/atomic [type=internal] : digested / updateBelly();
+b2858986.fe7e48.play/atomic => b2858986.fe7e48.meow/atomic : [belly empty];
+b2858986.fe7e48.play/atomic => b2858986.fe7e48.sleep/atomic : after 5 s;
+b2858986.fe7e48.eat/atomic => b2858986.fe7e48.sleep/atomic : [belly full];
+b2858986.fe7e48.eat/atomic => b2858986.fe7e48.meow/atomic : no more food;
+b2858986.fe7e48.eat/atomic => b2858986.fe7e48.eat/atomic [type=internal] : eaten / updateBelly();
