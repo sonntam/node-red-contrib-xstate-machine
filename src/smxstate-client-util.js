@@ -83,14 +83,14 @@ let smxstateUtilExports = (function() {
                 '#red-ui-sidebar-smxstate-content svg g.graph g:not([class="edge"])'
             );
             
-            elements.children('*[stroke][stroke!="transparent"]').attr('stroke','#000000');
+            elements.children('*[stroke][stroke!="transparent"][stroke!="none"]').attr('stroke','#000000');
 
             // Style active states
             for( let activeState of activeStates ) {
                 elements
                     .has('title:contains(' + data.machineId + '.' + activeState + '/)')
                     .has('title:not(:contains(/initial))')
-                    .children('*[stroke][stroke!="transparent"]')
+                    .children('*[stroke][stroke!="transparent"][stroke!="none"]')
                     .attr('stroke','#FF0000');
             }
             
