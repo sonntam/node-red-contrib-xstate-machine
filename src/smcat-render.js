@@ -404,9 +404,21 @@ async function renderPostProcessingFcn(smcatStr, timeoutMs, logOutput, callback)
     return output;
 }
 
+async function getRenderersFcn() {
+    let renderers = [ 
+        'smcat'
+    ];
+
+    if( await checkDot() )
+        renderers.push('dot');
+
+    return renderers;
+}
+
 module.exports = {
     init: initFcn,
     renderRaw: renderFcn,
     render: renderPostProcessingFcn,
-    renderTTLSeconds
+    renderTTLSeconds,
+    getRenderers: getRenderersFcn
 };
