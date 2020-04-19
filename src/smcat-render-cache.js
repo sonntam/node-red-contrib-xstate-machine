@@ -16,7 +16,9 @@ async function getCache(RED) {
 }
 
 async function setCache(RED, cache) {
-    await RED.settings.set('smxstate', { cache: clone(cache) });
+    let settings = RED.settings.get('smxstate') || {};
+    Object.assign( settings, { cache: clone(cache) } )
+    await RED.settings.set('smxstate', settings);
 }
 
 function getCacheEntryIdxFromHash(cache, hash) {
