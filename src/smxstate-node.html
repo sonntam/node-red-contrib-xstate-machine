@@ -11,6 +11,38 @@
 	#red-ui-sidebar-smxstate-context {
 		padding: 8px 10px;
 	}
+
+	div.red-ui-sidebar-smxstate-settings {
+		font-size: x-small;
+		display: inline-block;
+	}
+
+	div.red-ui-sidebar-smxstate-settings label,
+	div.red-ui-sidebar-smxstate-settings select,
+	div.red-ui-sidebar-smxstate-settings input {
+		font-size: x-small !important;
+	}
+
+	div.red-ui-sidebar-smxstate-settings label {
+		display: inline;
+		margin-right: 6px;
+	}
+
+	div.red-ui-sidebar-smxstate-settings select {
+		width: auto;
+		height: auto;
+		line-height: inherit;
+		margin: 0;
+		padding: 4px;
+	}
+
+	div.red-ui-sidebar-smxstate-settings input {
+		width: auto;
+		height: auto !important;
+		line-height: inherit !important;
+		margin: 0 !important;
+		padding: 0 0 0 4px !important;
+	}
 </style>
 
 <script type="text/x-red" data-template-name="smxstate">
@@ -30,6 +62,7 @@
 </script>
 
 <script type="text/javascript" src="smxstate-client-util.js" inline></script>
+<script type="text/javascript" src="smxstate-client-settings.js" inline></script>
 <script type="text/javascript">
 
 	// Get the default state machine via file inclusion

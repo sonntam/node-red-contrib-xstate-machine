@@ -2,7 +2,7 @@
 if( !RED ) {
     var RED = {}
 }
-RED.smxstate = (function() {
+let smxstateUtilExports = (function() {
 
     function getCurrentlySelectedNodeId() {
         let selector = $('#red-ui-sidebar-smxstate-display-selected');
@@ -282,7 +282,7 @@ RED.smxstate = (function() {
         let toolbar = $('<div class="red-ui-sidebar-header" style="text-align: left;">')
             .append(
                 $('<form>')
-                    .css("margin", 0)
+                    .css({ margin: 0, whiteSpace: "normal" })
                     .append($('<label>')
                         .attr("for", "red-ui-sidebar-smxstate-display-selected")
                         .text("State machine to view:")
@@ -321,6 +321,41 @@ RED.smxstate = (function() {
                                 '&nbsp;<span>refresh graph</span>'
                             )
                             .click(() => { RED.smxstate.display(true); })
+                        ),
+                        $('<div class="red-ui-sidebar-smxstate-settings">')
+                        .css({marginRight: "8px"})
+                        .append(
+                            '<label for="red-ui-sidebar-smxstate-settings-renderer">Renderer:</label>'
+                        )
+                        .append(
+                            $('<select id="red-ui-sidebar-smxstate-settings-renderer">')
+                                .change( (ev) => {
+                                    debugger;
+                                    RED.smxstate.settings.set('renderer', ev.target.value);
+                                })
+                        ),
+                        $('<div class="red-ui-sidebar-smxstate-settings">')
+                        .css({marginRight: "8px"})
+                        .append(
+                            '<label for="red-ui-sidebar-smxstate-settings-renderTimeoutMs">Render timeout in ms:</label>'
+                        )
+                        .append(
+                            $('<input type="text" id="red-ui-sidebar-smxstate-settings-renderTimeoutMs">')
+                                .css("width", "40px")
+                                .change( (ev) => { 
+                                    debugger; 
+                                    try {
+                                        let number = Number.parseInt(ev.target.value);
+                                        if( Number.isNaN(number) || number <= 0 ) throw("Render timeout must be a strictly positive integer.")
+                                        RED.smxstate.settings.set('renderTimeoutMs', number); 
+                                    } catch(err) {
+                                        RED.notify(err,"error");
+                                        // Reset
+                                        RED.smxstate.settings.get('renderTimeoutMs', (resp) => {
+                                            if( resp ) $(ev.target).val(resp);
+                                        })
+                                    }
+                                })
                         )
                     )
             );
@@ -374,6 +409,7 @@ RED.smxstate = (function() {
 
         // Clear list
         $('#red-ui-sidebar-smxstate-display-selected option:not([disabled])').remove();
+        $('#red-ui-sidebar-smxstate-settings-renderer option').remove();
 
         // Get node ids from server
         $.ajax({
@@ -397,6 +433,35 @@ RED.smxstate = (function() {
                 }
             }    
         });
+
+        // Get available renderers from server
+        RED.smxstate.settings.get("availableRenderers", (resp) => {
+            
+            let selectElement = $('#red-ui-sidebar-smxstate-settings-renderer');
+
+            if( resp ) {
+                
+                if( !Array.isArray(resp) ) resp = [resp];
+                for( let e of resp ) {
+                    selectElement.append(
+                        '<option value="' + e + '">' + e + '</option>'
+                    );
+                }
+            }
+
+            // Set current settings values
+            RED.smxstate.settings.get("renderer", (resp) => {
+                if( resp ) {
+                    selectElement.val(resp);
+                }
+            });
+        });
+
+        RED.smxstate.settings.get("renderTimeoutMs", (resp) => {
+            if( resp ) {
+                $('#red-ui-sidebar-smxstate-settings-renderTimeoutMs').val(resp);
+            }
+        });
     }
 
     function revealFcn() {
@@ -418,23 +483,21 @@ RED.smxstate = (function() {
         RED.view.reveal(idObj.rootId);
     }
 
-    function setRendererFcn(renderer) {
-        switch( renderer.toLowerCase() ) {
-            case 'dot':
-                RED.settings.set('smxstate',{renderer: 'dot'});
-                break;
-            case 'smcat':
-                RED.settings.set('smxstate',{renderer: 'smcat'});
-                break;
-            default:
-                return;
+    function updateSettingsFcn(settings) {
+        if( settings.hasOwnProperty("renderer") ) {
+            $("#red-ui-sidebar-smxstate-settings-renderer").val(settings.renderer); // Don't post event
         }
-    }
-
-    function setRenderTimeoutFcn() {
-        let timeoutMs = 20000;
-
-        RED.settings.set('smxstate',{renderTimeoutMs: timeoutMs});
+        if( settings.hasOwnProperty("availableRenderers") ) {
+            let o;
+            $("#red-ui-sidebar-smxstate-settings-renderer").children('option').attr('disabled','disabled');
+            for( o of settings.availableRenderers ) {
+                $("#red-ui-sidebar-smxstate-settings-renderer").children('option[value="'+o+'"]')
+                    .removeAttr('disabled');
+            }
+        }
+        if( settings.hasOwnProperty("renderTimeoutMs") ) {
+            $("#red-ui-sidebar-smxstate-settings-renderTimeoutMs").val(settings.renderTimeoutMs); // Don't post event
+        }
     }
 
     return {
@@ -448,7 +511,10 @@ RED.smxstate = (function() {
         updateContext: updateContextFcn,
         revealRoot: revealRootFcn,
         reveal: revealFcn,
-        setRenderer: setRendererFcn,
-        setRenderTimeout: setRenderTimeoutFcn
+        updateSettings: updateSettingsFcn
     };
 })();
+
+if( RED.smxstate ) Object.assign(RED.smxstate, smxstateUtilExports);
+else RED.smxstate = smxstateUtilExports;
+delete smxstateUtilExports;
