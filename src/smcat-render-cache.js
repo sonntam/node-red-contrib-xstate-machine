@@ -3,19 +3,19 @@ const util          = require('util');
 const crypto        = require('crypto');
 const path          = require('path');
 
-function getCache(RED) {
+async function getCache(RED) {
     let settings = RED.settings.get('smxstate');
 
     if( settings && settings.hasOwnProperty('cache') && Array.isArray(settings.cache) ) {
         return settings.cache;
     } else {
-        setCache(RED,[]);
+        await setCache(RED,[]);
         return [];
     }
 }
 
-function setCache(RED, cache) {
-    RED.settings.set('smxstate', { cache: cache });
+async function setCache(RED, cache) {
+    await RED.settings.set('smxstate', { cache: cache });
 }
 
 function getCacheEntryIdxFromHash(cache, hash) {
@@ -76,7 +76,7 @@ async function ensureDirectory(directory) {
     } catch( err ) {
         await fs.promises.mkdir(directory, { recursive: true });
     }
-  }
+}
 
 async function removeCachedFile(RED, cacheEntry) {
     try {
@@ -89,13 +89,13 @@ async function removeCachedFile(RED, cacheEntry) {
 }
 
 async function cacheRendering(RED, smcatStr, data, ttl) {
-    let cache = getCache(RED);
+    let cache = await getCache(RED);
     let hash = getInputHash(smcatStr);
     let cacheHit = getCacheEntryFromHash(cache, hash);
 
     if( cacheHit ) {
         // Remove
-        setCache(RED, removeCacheEntry(cache, cacheHit));
+        await setCache(RED, removeCacheEntry(cache, cacheHit));
 
         // Remove cached file if it exists
         await removeCachedFile(RED, cacheHit);
@@ -116,7 +116,7 @@ async function cacheRendering(RED, smcatStr, data, ttl) {
     }
 
     // Update cache
-    setCache(RED, addCacheEntry(cache, hash, file, ttl) );
+    await setCache(RED, addCacheEntry(cache, hash, file, ttl) );
 
     return true;
 }
@@ -125,7 +125,7 @@ async function cacheRendering(RED, smcatStr, data, ttl) {
 
 async function getCachedRendering(RED, smcatStr) {
     // Try to get from cache
-    let cache = getCache(RED);
+    let cache = await getCache(RED);
     let cacheHit = getCacheEntry(cache, smcatStr);
 
     if( cacheHit ) {
@@ -151,7 +151,7 @@ async function getCachedRendering(RED, smcatStr) {
         } catch(err) {
             // Invalid cache entry, remove from cache
             console.log(`Invalid smxstate cache entry: ${err}. Deleting from cache...`);
-            setCache(RED, removeCacheEntry(cache, cacheHit));
+            await setCache(RED, removeCacheEntry(cache, cacheHit));
             // Remove cached file if it exists
             await removeCachedFile(RED, cacheHit);
         }
