@@ -6,6 +6,8 @@ module.exports = function (RED) {
 	var smcat     = require('../src/smcat-render');
 	var immutable = require('immutable');
 	xstate.smcat  = require('../src/xstate-smcat');
+	RED.smxstate  = {};
+	RED.smxstate.settings = require('../src/smxstate-settings');
 
 	var registeredNodeIDs = [];
 	var activeId = null;
@@ -447,6 +449,9 @@ result = (function(__send__,__done__){
 	// Do one time init tasks
 	smcat.init(RED);
 
+	// Initialize settings
+	RED.smxstate.settings.init(RED);
+
 	RED.httpAdmin.get("/smxstate/:method", RED.auth.needsPermission("smxstate.read"), function(req,res) {
 		switch(req.params.method) {
 			case 'getnodes':
@@ -454,12 +459,46 @@ result = (function(__send__,__done__){
 					res.status(200).send(registeredNodeIDs);
 				} catch(err) {
 					res.sendStatus(500);
-					node.error(`GET Command failed: ${err.toString()}`);
+					console.error(`smxstate: GET Command failed: ${err.toString()}`);
+				}
+				break;
+			case 'settings':
+				try {
+					let property = req.query.property;
+					let value = RED.smxstate.settings.get(property);
+					if( value !== null )
+						res.status(200).send({ [property]: value });
+					else {
+						res.sendStatus(404);
+						console.error(`smxstate: No setting named ${property} is available`);
+					}
+				} catch(err) {
+					res.sendStatus(500);
+					console.error(`smxstate: GET Command failed: ${err.toString()}`);
 				}
 				break;
 			default:
 				res.sendStatus(404);
-				node.error(`Invalid method: ${req.params.method}`);
+				console.error(`smxstate: Invalid method: ${req.params.method}`);
+				break;
+		}
+	});
+
+	RED.httpAdmin.post("/smxstate/:method", RED.auth.needsPermission("smxstate.write"), function(req,res) {
+		switch(req.params.method) {
+			case 'settings':
+				try {
+					RED.smxstate.settings.set(req.body.property, req.body.value ).then( () => {
+						res.status(200).send("success");
+					}).catch( (err) => { throw(err); });
+				} catch(err) {
+					res.sendStatus(500);
+					console.error(`smxstate: POST Command for method ${req.params.method} failed: ${err.toString()}`);
+				}
+				break;
+			default:
+				res.sendStatus(404);
+				console.error(`smxstate: Invalid method: ${req.params.method}`);
 				break;
 		}
 	});
@@ -548,6 +587,7 @@ result = (function(__send__,__done__){
 			}
 			
 		} else {
+			console.error(`smxstate: node with id ${req.params.id} does not exist for method ${req.params.method}.`)
 			res.sendStatus(404);
 		}
 	});
