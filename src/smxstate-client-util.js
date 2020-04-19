@@ -425,7 +425,7 @@ let smxstateUtilExports = (function() {
                 if (jqXHR.status == 404) {
                     RED.notify(RED._("node-red:common.notification.error",{message:"resource not found"}),"error");
                 } else if (jqXHR.status == 500) {
-                    RED.notify("Rendering of the state machine failed.","error");
+                    RED.notify("Retrieval of available state machines failed.","error");
                 } else if (jqXHR.status == 0) {
                     RED.notify(RED._("node-red:common.notification.error",{message:RED._("node-red:common.notification.errors.no-response")}),"error");
                 } else {
