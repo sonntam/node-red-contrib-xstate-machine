@@ -512,7 +512,6 @@ result = (function(__send__,__done__){
 						let smcat_machine = xstate.smcat.toSmcat(node.context().xstate.machine);
 
 						// Render in separate process with timeout
-						console.time('render');
 
 						(async () => {
 							try {
@@ -526,7 +525,6 @@ result = (function(__send__,__done__){
 							
 								let smcat_svg;
 
-								console.timeEnd('render');
 								if( !!output && output.code === 0 ) {
 									smcat_svg = output.data;
 								} else {
