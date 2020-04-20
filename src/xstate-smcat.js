@@ -15,6 +15,7 @@ function getStateAction(actionTrigger) {
     return actionTrigger
         .filter( e => !e.hasOwnProperty('id') || !e.id.startsWith("xstate.after(") )
         .filter( e => !e.hasOwnProperty('sendId') || !e.sendId.startsWith("xstate.after(") )
+        .filter( e => ( e.toString() ? true : false) )
         .map( e => (e.id ? e.id : e.toString()).replace(/['";,{}\[\]]\s/sgi,'') + '()' )
         .join(' ');
 }
