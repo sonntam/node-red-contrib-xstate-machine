@@ -1,5 +1,19 @@
 # node-red-contrib-xstate-machine
 
+## 0.3.0
+
+### Minor Changes
+
+- 2d05f27: Added caching for state machine visualization renderings to speed up display on low-end hardware
+- 15e5cf7: Implemented custom settings for smxstate node (caching, renderer settings, ...)
+- 7af5b43: If available native graphviz dot can now be used as renderer instead of viz.js
+
+### Patch Changes
+
+- 78ecaf3: Fixed problem with rendering of empty action objects
+- fc14fb9: Update docs to reflect the extended sidebar settings
+- 576e5c8: Update dependencies xstate and clone
+
 ## 0.2.1
 
 ### Patch Changes
