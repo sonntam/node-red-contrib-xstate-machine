@@ -11,6 +11,43 @@ The goal of this package is to provide an easy yet flexible and customizable way
 
 ## Recent changes
 
+### Migrating from 0.X to 1.X
+
+**Breaking change 🚨**
+
+The way an external `msg.payload` is assigned to an event's data internally in the machine has been changed. Previously `msg.payload` had to be an object or JSON and
+all the properties were assigned directly to the internal event object. Now all the payload data is available under the `payload` property of the event object, e.g.
+
+```js
+// Input event message sent to the smxstate node input
+  msg = {
+    payload: {
+      data1: "DATA",
+      data2: "DATA"
+    },
+    topic: "run"
+  }
+```
+
+then the internal handling of the data is
+
+```js
+// Example action function
+(context,event) => {
+  node.warn( util.inspect(event) );
+
+  // now outputs 
+  // { type: "run", payload: { data1: "DATA", data2: "DATA" } }
+  //
+  // pre 1.X it would have output
+  // { type: "run", data1: "DATA", data2: "DATA" }
+}
+```
+
+This fixes the handling of non object data such as arrays, strings.
+
+### All changes
+
 See the [changelog](CHANGELOG.md) for an overview over the available versions and changes.
 
 ## Introduction
