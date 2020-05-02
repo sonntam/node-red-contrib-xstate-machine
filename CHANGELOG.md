@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.0.0
+
+### Major Changes
+
+- 020db5c: Breaking change: Event data read from an external message's payload property is now also available within the payload property of the event. You will have to change your statemachines that process external event data accordingly. See README.md section "Migrating from 0.X to 1.X" for more details.
+
 ## 0.3.0
 
 ### Minor Changes

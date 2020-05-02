@@ -414,7 +414,7 @@ result = (function(__send__,__done__){
 					if( msg.topic === "reset" ) {
 						restartMachine( node );
 					} else {
-						nodeContext.xstate.service.send(msg.topic, msg.payload);
+						nodeContext.xstate.service.send(msg.topic, { payload: msg.payload });
 					}
 				}
 				else
