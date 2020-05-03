@@ -26,32 +26,37 @@ describe('smcat renderer', function() {
             data.data.should.match(/<svg.*?<\/svg>\s*$/si);
             data.code.should.be.exactly(0);
             should(data.err).be.exactly(null);
+        }).then((result) => {
+
+            (!!result).should.be.true();
+            result.should.have.property('data');
+            result.should.have.property('err');
+            result.should.have.property('code');
+            result.data.should.match(/<svg.*?<\/svg>\s*$/si);
+            result.code.should.be.exactly(0);
+            should(result.err).be.exactly(null);
 
             done();
         });
-
-        (!!result).should.be.true();
-        result.should.be.instanceOf(modChildProcess.ChildProcess);
     });
 
     it('should time out', function (done) {
-        let result = renderRaw(exampleSMCATSrc, (data) => {
+        let result = renderRaw(exampleSMCATSrc, 10, (data) => {
             should(data).be.exactly(null);
+        }).then((result) => {
+            should(result).be.exactly(null);
             done();
-        }, 10);
-
-        (!!result).should.be.true();
-        result.should.be.instanceOf(modChildProcess.ChildProcess);
+        });
     });
 
     it('should return syntax error', function(done) {
-        let result = renderRaw(exampleSMCATErrSrc, (data) => {
+        let result = renderRaw(exampleSMCATErrSrc, 39258235, (data) => {
             (!!data).should.be.true();
             data.should.have.property('err');
             data.should.have.property('code');
             data.err.should.match(/syntax\serror/si);
             data.code.should.be.above(0);
-
+        }).then( (result) => {
             done();
         });
     });
@@ -66,11 +71,9 @@ describe('smcat renderer', function() {
             data.data.should.match(/<html.*?<svg.*?<\/svg>.*?<\/html>$/si);
             data.code.should.be.exactly(0);
             should(data.err).be.exactly(null);
-
+        }).then( (result) => {
             done();
         });
 
-        (!!result).should.be.true();
-        result.should.be.instanceOf(modChildProcess.ChildProcess);
     });
 });

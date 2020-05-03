@@ -58,8 +58,11 @@ async function renderDotFcn(smcatStr, options) {
         if( code !== 0 && options.logOutput )
             console.log(`smcat renderer process exited with error code ${code}.`);
         
-        if( !terminated )
+        if( !terminated ) {
             dotProc.stdin.end();
+        }
+
+        if( code !== 0 ) dotProc.kill();
     });
 
     dotProc.on('error', (err) => {
@@ -97,14 +100,21 @@ async function renderDotFcn(smcatStr, options) {
                 console.log(`dot renderer process exited with error code ${code}.`);
 
             smcatProc.kill();
-            terminated = true;
 
-            resolve({ 
+            let result;
+            
+            result = ( terminated ? null : { 
                 data: code === 0 ? buf.toString('utf8') : null, 
-                code: code,
+                code: code === null ? 1 : code,
                 err:  code !== 0 ? errbuf.toString('utf8') : null
             });
-            
+
+            terminated = true;
+
+            if( options.onDone && typeof options.onDone === "function" )
+                options.onDone(result);
+
+            resolve(result);
         });
     });
 
@@ -174,14 +184,18 @@ async function renderSMCatFcn(smcatStr, options) {
             if( code !== 0 && options.logOutput )
                 console.log(`smcat renderer process exited with error code ${code}.`);
 
-            if( !terminated )
-                resolve({ 
+            let result = (terminated ? null : { 
                     data: code === 0 ? buf.toString('utf8') : null, 
                     code: code,
                     err:  code !== 0 ? errbuf.toString('utf8') : null
-                });
-            else
-                resolve(null);
+            });
+
+            terminated = true;
+
+            if( options.onDone && typeof options.onDone === "function" )
+                options.onDone(result);
+
+            resolve(result);
         });
     });
 
@@ -385,6 +399,8 @@ async function renderPostProcessingFcn(smcatStr, timeoutMs, logOutput, callback)
     if( !smcatStr ) return null;
     
     var options = await normalizeOptions(...(Array.prototype.slice.call(arguments,1)) );
+    var onDone  = options.onDone;
+    options.onDone = undefined;
 
     if( !options.forceRedraw  && RED ) {
         let cached = await cache.getCachedRendering(RED, smcatStr);
@@ -397,8 +413,13 @@ async function renderPostProcessingFcn(smcatStr, timeoutMs, logOutput, callback)
     if( !!output && output.code === 0 ) {
         output.data = postprocessSVG(output.data);
 
+        // Callback
+        if( onDone && typeof onDone === "function" )
+            onDone(output);
+
         // Cache this render
-        await cache.cacheRendering(RED, smcatStr, output, renderTTLSeconds );   
+        if( RED )
+            await cache.cacheRendering(RED, smcatStr, output, renderTTLSeconds );   
     }
 
     return output;
