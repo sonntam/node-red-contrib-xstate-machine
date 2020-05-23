@@ -1,5 +1,16 @@
 # node-red-contrib-xstate-machine
 
+## 1.1.0
+
+### Minor Changes
+
+- 9cfd832: Allow use of flow. context. and global. functions within smxstate
+
+### Patch Changes
+
+- fb4eefe: Changed smxstate node output labels to "stateChanged" and "msgOutput"
+- 5e274dc: Updated dependencies
+
 ## 1.0.0
 
 ### Major Changes
