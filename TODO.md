@@ -25,3 +25,4 @@ TODO
  - [ ] See what it takes to put the visualization onto node-red-dashboard
  - [x] Revisit the rendering process timeout of 10 seconds because [RasPi2 performance seems to be too low for the cat example](https://discourse.nodered.org/t/announcement-node-red-contrib-xstate-machine-flexible-state-machines-for-node-red/24262/6?u=sonntam)
  - [x] Implement caching for the visualization graphics
+ - [ ] Correct handling of renamed flows
