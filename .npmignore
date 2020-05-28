@@ -1,5 +1,6 @@
 .vscode/*
 images/*
+.changeset/*
 TODO.md
 examples/*
 tests/*
