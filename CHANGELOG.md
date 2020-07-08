@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.1.1
+
+### Patch Changes
+
+- cd848e4: Updated dependencies xstate smcat and checked compatibility with node-red 1.1.0
+
 ## 1.1.0
 
 ### Minor Changes
