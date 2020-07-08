@@ -41,11 +41,11 @@
     "immutable": "^4.0.0-rc.12",
     "indent-string": "^4.0.0",
     "jsdom": "^16.2.2",
-    "state-machine-cat": "^7.0.0",
-    "xstate": "^4.10.0"
+    "state-machine-cat": "^7.0.5",
+    "xstate": "^4.11.0"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.7.2",
+    "@changesets/cli": "^2.9.2",
     "del": "^5.1.0",
     "gulp": "^4.0.2",
     "gulp-chmod": "^3.0.0",
@@ -57,8 +57,8 @@
     "gulp-rename": "^2.0.0",
     "merge-stream": "^2.0.0",
     "minimist": "^1.2.5",
-    "mocha": "^7.1.2",
-    "node-red": "^1.0.6",
-    "node-red-node-test-helper": "^0.2.3"
+    "mocha": "^8.0.1",
+    "node-red": "^1.1.0",
+    "node-red-node-test-helper": "^0.2.5"
   }
 }
