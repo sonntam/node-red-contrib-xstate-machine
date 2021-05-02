@@ -42,7 +42,7 @@
     "clone": "^2.1.2",
     "command-exists-promise": "^2.0.2",
     "immutable": "^4.0.0-rc.12",
-    "indent-string": "^4.0.0",
+    "indent-string": "^5.0.0",
     "jsdom": "^16.2.2",
     "state-machine-cat": "^7.0.5",
     "xstate": "^4.11.0"
