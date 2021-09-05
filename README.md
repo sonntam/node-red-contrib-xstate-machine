@@ -266,6 +266,9 @@ This will give you a state machine to play with. It incorporates actions, delaye
 * Install dependencies using `npm install`
 * Trigger the build tool-chain using `npm run devbuild` to create a development build version that is easy to debug. If you use Visual Studio Code for development you can use the provided launch.json to run a node-red environment where you can quickly test the node. To use it first create a dir called `./tmp` in this packages root dir and then change to it. Then run `npm install ..` to create a link to your working copy of the package for the node-red environment.
 * Running `npm run build` will create deployable production output in the `./dist` directory.
+* To run tests, execute `npx mocha ./tests`. To add tests, create a files `<description>_spec.js` with a mocha test specification.
+* Using [changesets](https://github.com/atlassian/changesets): Before committing a change that should be visible on the changelog run `npx changeset` and input the corresponding information into the wizard. Then add the created file in the `.changeset` folder to the commit.
+* Publishing: run `npx changeset version` to create a new version number, update package.json and the CHANGELOG.md files. Then run npx changeset publish to publish to npm
 
 ## Acknowledgements
 
