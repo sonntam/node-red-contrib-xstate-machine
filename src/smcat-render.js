@@ -11,7 +11,7 @@ const smcatPath = path.resolve(
     path.join(
         path.dirname(
             require.resolve('state-machine-cat')
-        ),'..','bin','smcat'
+        ),'..','..','bin','smcat.mjs'
     )
 );
 
@@ -187,7 +187,7 @@ async function renderSMCatFcn(smcatStr, options) {
             let result = (terminated ? null : { 
                     data: code === 0 ? buf.toString('utf8') : null, 
                     code: code,
-                    err:  code !== 0 ? errbuf.toString('utf8') : null
+                    err:  errbuf.toString('utf8')
             });
 
             terminated = true;

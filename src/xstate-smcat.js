@@ -1,6 +1,6 @@
 // Converter for XSTATE machines to SMCAT format for visualization
 // It does not support all features
-const indent = require('indent-string');
+const indentString = require('indent-string');
 
 const typeSep = '/';
 const finalNodeSuffix = "Node";
@@ -69,12 +69,12 @@ function createChildrenStates(parentState,level) {
         let transitionDef = '';
 
         let code = getStateCode(stateObj);
-        if( code ) stateDef += " :\n" + indent(code, 4);
+        if( code ) stateDef += " :\n" + indentString(code, 4);
 
         // Recurse
         let childDefs = createChildrenStates(stateObj, level+1);
 
-        if( childDefs.states ) stateDef += ' {\n' + indent(childDefs.states, 4*(level+1)) + '\n}';
+        if( childDefs.states ) stateDef += ' {\n' + indentString(childDefs.states, 4*(level+1)) + '\n}';
         if( childDefs.transitions ) transitionsDef += "\n" + childDefs.transitions;
 
         statesDef.push(stateDef);
