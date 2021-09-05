@@ -1,5 +1,12 @@
 # node-red-contrib-xstate-machine
 
+## 1.2.0
+
+### Minor Changes
+
+- b2a90cd: Set minimum required node.js version to 12.0
+- d32cce7: update dependencies
+
 ## 1.1.1
 
 ### Patch Changes
