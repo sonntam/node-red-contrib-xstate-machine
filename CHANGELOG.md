@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.2.1
+
+### Patch Changes
+
+- c8e2d6a: Fixed display of state actions due to change in xstate
+
 ## 1.2.0
 
 ### Minor Changes
