@@ -185,10 +185,10 @@ function createTransitions(parentState) {
         if( transition.actions ) {
             if( Array.isArray(transition.actions) ) {
                 if( transition.actions.length > 0 )
-                    transitionLabel +=  " / " + transition.actions.reduce( (a,e) => (!a? (e.toString() + "()"):(a + ", " + e.toString() + "()")), "" );
+                    transitionLabel +=  " / " + transition.actions.reduce( (a,e) => (!a? (e.type + "()"):(a + ", " + e.type + "()")), "" );
             }
             else
-                transitionLabel += " / " + transition.actions.toString() + "()";
+                transitionLabel += " / " + transition.actions.type + "()";
         } 
         
         if( transitionLabel ) transitionDefs = transitionDefs.map( (e) => e + " : " + transitionLabel.trim());
