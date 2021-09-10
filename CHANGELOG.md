@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.2.2
+
+### Patch Changes
+
+- c506a42: Fixed display of transition actions
+
 ## 1.2.1
 
 ### Patch Changes
