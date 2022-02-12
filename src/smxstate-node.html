@@ -89,6 +89,10 @@
 			var that = this;
 
 			this.editor = RED.editor.createEditor({
+				extraLibs: [
+					{var: "xstate", module: "xstate"},
+					{var: "util", module: "util"}
+				], // for monaco
 				id: 'node-input-xstateDefinition-editor',
 				mode: 'ace/mode/nrjavascript',
 				value: $("#node-input-xstateDefinition").val(),
