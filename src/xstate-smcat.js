@@ -12,11 +12,22 @@ function getStateName(state) {
 function getStateAction(actionTrigger) {
     if(!actionTrigger || actionTrigger.length == 0 )  return null;
 
-    return actionTrigger
+    actionTrigger = actionTrigger
         .filter( e => !e.hasOwnProperty('id') || !e.id.startsWith("xstate.after(") )
         .filter( e => !e.hasOwnProperty('sendId') || !e.sendId.startsWith("xstate.after(") )
-        .filter( e => ( e.type ? true : false) )
-        .map( e => (e.id ? e.id : e.type).replace(/['";,{}\[\]]\s/sgi,'') + '()' )
+        .filter( e => ( e.type ? true : false) );
+
+    let actionNames = [];
+
+    actionNames = actionTrigger.map( e => {
+        if( e.hasOwnProperty('type') && e.type === 'xstate.invoke') {
+            return "invoke::" + (e.src ? e.src : e.id);
+        }
+        return e.id ? e.id : e.type;
+    });
+
+    return actionNames
+        .map( e => e.replace(/['";,{}\[\]]\s/sgi,'') + '()' )
         .join(' ');
 }
 
