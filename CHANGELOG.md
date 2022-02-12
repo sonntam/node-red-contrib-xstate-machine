@@ -1,5 +1,12 @@
 # node-red-contrib-xstate-machine
 
+## 1.2.4
+
+### Patch Changes
+
+- 59683a8: Update and fix versions of some dependencies (jsdom, smcat, xstate)
+- 4ff63ce: Fix visualization of service invocations in xstate
+
 ## 1.2.3
 
 ### Patch Changes
