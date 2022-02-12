@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.2.3
+
+### Patch Changes
+
+- 4b6a016: Fix intellisense errors for xstate and util packages in monaco editor
+
 ## 1.2.2
 
 ### Patch Changes
