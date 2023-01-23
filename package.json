@@ -43,7 +43,7 @@
     "command-exists-promise": "^2.0.2",
     "immutable": "^4.0.0-rc.14",
     "indent-string": "^4.0.0",
-    "jsdom": "^19.0.0",
+    "jsdom": "^21.1.0",
     "state-machine-cat": "9.2.2",
     "xstate": "4.30.0"
   },
