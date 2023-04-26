@@ -25,10 +25,6 @@ const { assign } = xstate;
 /**
  * Guards
  */
-const maxValueReached = (context, event) => {
-    node.warn(event)
-    return context.counter >= 10;
-};
 
 const cmdSent = context => context.cmdSent;
 const respReceived = context => context.respReceived;
@@ -43,137 +39,24 @@ const sendCmd = assign({ cmdSent: true });
 // const showResp = assign({ respReceived: true });
 const showResp = assign({
     respReceived: (context, event) => {
-        // Can send log messages via
-        //  - node.log
-        //  - node.warn
-        //  - node.error
-        //node.warn("RESET");
-
-        // Can send messages to the second outport
-        // Specify an array to send multiple messages
-        // at once
-        //  - node.send(msg)
-
-        node.warn(event)
-
-        // node.send({ payload: "resetCounter" });
-        node.send(event);
-
         return true;
     }
 });
-const incrementCounter = assign({
-    counter: (context, event) => context.counter + 1
-});
-
-const resetCounter = assign({
-    counter: (context, event) => {
-        // Can send log messages via
-        //  - node.log
-        //  - node.warn
-        //  - node.error
-        //node.warn("RESET");
-
-        // Can send messages to the second outport
-        // Specify an array to send multiple messages
-        // at once
-        //  - node.send(msg)
-
-        node.warn(event)
-
-        node.send({ payload: "resetCounter" });
-
-        return 0;
-    }
-});
-
-/**
- * Activities
- */
-// const doStuff = () => {
-//   // See https://xstate.js.org/docs/guides/activities.html
-//   const interval = setInterval(() => {
-//     node.send({ payload: 'BEEP' });
-//   }, 1000);
-//   return () => clearInterval(interval);
-// };
 
 /**
  * Services
  */
 const waitResp = (context, event) => (cb) => {
 
-    // node.warn(context)
-    node.warn("waitResp")
-    node.warn(event)
-
-    node.send(event);
-
-    if (event.payload.callback) {
-        setTimeout(() => {
-            // cb({ type: 'respReceived' });
-            // cb({ type: 'respReceived' });
-            cb({ type: 'timeout' });
-        }, 3000);
-    }
-
+    setTimeout(() => {
+        cb({ type: 'timeout' });
+    }, 3000);
 
 }
 
 /***************************
  * Main machine definition * 
  ***************************/
-// return {
-//   machine: {
-//     context: {
-//       counter: 0
-//     },
-//     initial: 'run',
-//     states: {
-//       run: {
-//         initial: 'count',
-//         states: {
-//           count: {
-//             on: {
-//               '': { target: 'reset', cond: 'maxValueReached' }
-//             },
-//             after: {
-//               1000: { target: 'count', actions: 'incrementCounter' }
-//             }
-//           },
-//           reset: {
-//             exit: 'resetCounter',
-//             after: {
-//               5000: { target: 'count' }
-//             },
-//             activities: 'doStuff'
-//           }
-//         },
-//         on: {
-//           PAUSE: 'pause'
-//         }
-//       },
-//       pause: {
-//         on: {
-//           RESUME: 'run'
-//         }
-//       }
-//     }
-//   },
-//   // Configuration containing guards, actions, activities, ...
-//   // see above
-//   config: {
-//     guards: { maxValueReached },
-//     actions: { incrementCounter, resetCounter },
-//     activities: { doStuff }
-//   },
-//   // Define listeners (can be an array of functions)
-//   //    Functions get called on every state/context update
-//   listeners: (data) => {
-//     //node.warn(data.state + ":" + data.context.counter);
-//   }
-// };
-
 return {
     machine: {
         context: {
@@ -218,9 +101,5 @@ return {
         },
         actions: { sendCmd, showResp },
         services: { waitResp }
-    },
-    listeners: (data) => {
-        // node.warn("listeners: " + data.state);
-        // node.warn(data.context);
     }
 };

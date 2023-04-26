@@ -40,7 +40,7 @@ describe('smxstate node with tcp-client.js example machine', function() {
         });
     });
 
-    it('should transition state to RUN upon <sendCmd> event and back to INIT on <reset>', function (done) {
+    it('should transition state to RUN upon <sendCmd> event and back to <timeout>', function (done) {
         this.timeout(10000);
         helper.load(smxstateNode, flow, function () {
             var n1 = helper.getNode("n1");
@@ -49,48 +49,52 @@ describe('smxstate node with tcp-client.js example machine', function() {
             var msgcounter = 0;
             n2.on("input", function (msg) {
                 // Ignore context messages
-
                 if( msg.hasOwnProperty('topic') && msg.topic === 'context' ) return;
-
 
                 msg.should.have.property('topic', 'state');
                 msg.should.have.property('payload');
                 msg.payload.should.have.property('state');
 
                 msgcounter++;
-
-                console.log(msg,msgcounter)
-
-                if( msgcounter === 0 ) {
-                    console.log('respReceived')
-                    setTimeout(()=>n1.receive({ topic: 'respReceived' }),1000)
-                }
-            
                 if( msgcounter === 1 ) {
-                    msg.payload.state.should.have.property('RUN','STOP');
-                    n1.receive({ topic: 'respReceived' });
+                    msg.payload.state.should.equal('waitingResp');
                 }
                 else if( msgcounter === 2 ) {
-                    msg.payload.state.should.equal('ready');
-                    // done();
+                    msg.payload.state.should.equal('timeout');
+                    done();
                 }
-                else if( msgcounter === 3 ) {
-                    msg.payload.state.should.equal('ready');
-                    // done();
+            });
+            n1.receive({ topic: "sendCmd"});
+        });
+    });
+
+    it('should transition state to RUN upon <sendCmd> event and response in 1s ', function (done) {
+        this.timeout(10000);
+        helper.load(smxstateNode, flow, function () {
+            var n1 = helper.getNode("n1");
+            var n2 = helper.getNode("n2");
+          
+            var msgcounter = 0;
+            n2.on("input", function (msg) {
+                // Ignore context messages
+                if( msg.hasOwnProperty('topic') && msg.topic === 'context' ) return;
+
+                msg.should.have.property('topic', 'state');
+                msg.should.have.property('payload');
+                msg.payload.should.have.property('state');
+
+                msgcounter++;
+                if( msgcounter === 1 ) {
+                    msg.payload.state.should.equal('waitingResp');
+                    setTimeout(()=>n1.receive({ topic: 'respReceived' }),1000)
                 }
-                else if( msgcounter === 4 ) {
-                    msg.payload.state.should.equal('ready');
-                    // done();
-                }
-                else if( msgcounter === 5 ) {
+                else if( msgcounter === 2 ) {
                     msg.payload.state.should.equal('ready');
                     done();
                 }
             });
             n1.receive({ topic: "sendCmd"});
-            // n1.receive({ topic: 'respReceived' });
+
         });
     });
-
-
 });
