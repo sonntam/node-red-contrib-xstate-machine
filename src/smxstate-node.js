@@ -149,7 +149,7 @@ module.exports = function (RED) {
                 var func = arguments[0];
                 var timerId;
                 arguments[0] = function() {
-                    sandbox.clearTimeout(timerId);
+                    //sandbox.clearTimeout(timerId);
                     try {
                         func.apply(this,arguments);
                     } catch(err) {
