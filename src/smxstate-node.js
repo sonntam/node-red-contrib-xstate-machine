@@ -57,7 +57,7 @@ module.exports = function (RED) {
 	}
 
 	function getSandbox(node) {
-		return {
+		var sandbox = {
 			console:console,
             util:util,
             Buffer:Buffer,
@@ -149,6 +149,7 @@ module.exports = function (RED) {
                 var func = arguments[0];
                 var timerId;
                 arguments[0] = function() {
+					sandbox.clearTimeout(timerId);
                     try {
                         func.apply(this,arguments);
                     } catch(err) {
@@ -188,6 +189,7 @@ module.exports = function (RED) {
                 }
             }
         };
+		return sandbox;
 	}
 
 	function getFunctionText(node) {
