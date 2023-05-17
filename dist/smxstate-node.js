@@ -57,7 +57,7 @@ module.exports = function (RED) {
 	}
 
 	function getSandbox(node) {
-		return {
+		var sandbox = {
 			console:console,
             util:util,
             Buffer:Buffer,
@@ -189,6 +189,8 @@ module.exports = function (RED) {
                 }
             }
         };
+
+		return sandbox;
 	}
 
 	function getFunctionText(node) {

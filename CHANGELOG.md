@@ -1,5 +1,15 @@
 # node-red-contrib-xstate-machine
 
+## 1.3.0
+
+### Minor Changes
+
+- ea32705: Update dependencies to latest minor version
+
+### Patch Changes
+
+- bf0a6e7: Fix problem with usage of setTimeout and clearTimeout
+
 ## 1.2.4
 
 ### Patch Changes
