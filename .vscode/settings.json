@@ -1,0 +1,9 @@
+{
+    "mochaExplorer.files": "tests/**/*.js",
+    "search.exclude": {
+        "dist": true,
+        "**/node_modules": true,
+        "**/bower_components": true,
+        "**/*.code-search": true
+    }
+}
