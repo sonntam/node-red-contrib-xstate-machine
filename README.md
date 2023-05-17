@@ -269,6 +269,7 @@ This will give you a state machine to play with. It incorporates actions, delaye
 * To run tests, execute `npx mocha ./tests`. To add tests, create a files `<description>_spec.js` with a mocha test specification.
 * Using [changesets](https://github.com/atlassian/changesets): Before committing a change that should be visible on the changelog run `npx changeset` and input the corresponding information into the wizard. Then add the created file in the `.changeset` folder to the commit.
 * Publishing: If not done yet, login to npm using `npm login`. Then run `npx changeset version` to create a new version number, update package.json and the CHANGELOG.md files. Commit these changes with message `Release VX.Y.Z`. Then run `npx changeset publish` to publish to npm. Now run `git push --follow-tags` to push the version tag created by changeset.
+* Updating dependencies: run `npm outdated` to get a list of upgradeable packages. Then run `npm update` to update accordingly.
 
 ## Acknowledgements
 
