@@ -70,7 +70,7 @@ describe('smxstate node with default machine', function() {
         });
     });
 
-    it('should count to 10 and then reset to 0', function (done) {
+    it('should count to 10 and then reset to 0 (takes approx 10 seconds)', function (done) {
         this.timeout(20000);
         helper.load(smxstateNode, flow, function () {
             var n1 = helper.getNode("n1");
