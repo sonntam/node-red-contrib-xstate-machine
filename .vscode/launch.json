@@ -53,7 +53,12 @@
             ],
             "port": 9229,
             "internalConsoleOptions": "openOnSessionStart",
-            "preLaunchTask": "devbuild"
+            "preLaunchTask": "debugtasks",
+            "outFiles":[
+                "${workspaceFolder}/tmp/node_modules/node-red-contrib-xstate-machine/dist/*.js",
+                "${workspaceFolder}/dist/*.js"
+            ],
+            "sourceMaps": true,
         }
     ]
 }

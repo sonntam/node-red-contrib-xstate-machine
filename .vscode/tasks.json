@@ -1,9 +1,38 @@
 {
     "version": "2.0.0",
-    "tasks": [{
-        "label": "devbuild",
-        "command": "npm", // Could be any other shell command
-        "args": ["run", "devbuild"],
-        "type": "shell"
-    }]
+    "tasks": [
+        {
+            "label": "devbuild",
+            "command": "npm", // Could be any other shell command
+            "args": ["run", "devbuild"],
+            "type": "shell"
+        },
+        {
+            "label": "remove_debug_env",
+            "command": "npm", // Could be any other shell command
+            "args": ["uninstall", "node-red-contrib-xstate-machine"],
+            "options": {
+                "cwd": "${workspaceFolder}/tmp"
+            },
+            "type": "shell"
+        },
+        {
+            "label": "integrate_debug_env",
+            "command": "npm", // Could be any other shell command
+            "args": ["install", ".."],
+            "options": {
+                "cwd": "${workspaceFolder}/tmp"
+            },
+            "type": "shell"
+        },
+        {
+            "label": "debugtasks",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "devbuild",
+                "remove_debug_env",
+                "integrate_debug_env"
+            ]
+        }
+    ]
 }
