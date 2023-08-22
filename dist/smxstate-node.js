@@ -196,7 +196,7 @@ module.exports = function (RED) {
 	function getFunctionText(node) {
 		return `
 var result = null;
-result = (function(__send__,__done__){
+result = (async function(__send__,__done__){
 	var node = {
 		id:__node__.id,
 		name:__node__.name,
@@ -206,7 +206,7 @@ result = (function(__send__,__done__){
 		debug:__node__.debug,
 		trace:__node__.trace,
 		status:__node__.status,
-		send:function(msgs,cloneMsg){__node__.send(__send__,null,msgs,cloneMsg);},
+		send:function(msgs,cloneMsg){__node__.send(__send__,RED.util.generateId(),msgs,cloneMsg);},
 		done:__done__
 	}
 	${node.config.xstateDefinition}
@@ -256,7 +256,7 @@ result = (function(__send__,__done__){
 		if( service )
 			service.stop();
 
-		let machine = xstate.Machine(
+		let machine = xstate.createMachine(
 			context.xstate.blueprint.toJS(),
 			context.xstate.machineConfig ? context.xstate.machineConfig : undefined);
 
@@ -336,8 +336,9 @@ result = (function(__send__,__done__){
 
 		service
 			.onTransition( (state) => transitionFcn(state) )
-			.onChange( (context, previousContext) => { if( context !== previousContext ) dataChangedFcn(context, previousContext); } )
-			.start();
+			.onChange( (context, previousContext) => { if( context !== previousContext ) dataChangedFcn(context, previousContext); } );
+
+		service.start();
 	}
 
 	function getNodeParentPath(node) {
@@ -413,36 +414,44 @@ result = (function(__send__,__done__){
 				displayErrors: true
 			});
 
-			this.initscript.runInContext(vmcontext);
+			let promise = this.initscript.runInContext(vmcontext);
 			
-			let smobj, smcfg, smlisteners;
+			// Check for the variable names 'machine', 'config', and 'listeners'
+			// in the context of the vm after executing the init script. These
+			// are saved in the node's context and passed to the xstate interpreter.
+			// If 'machine' is not present assume that the script just returns an
+			// object containing the whole machine definition.
+			promise.then((result) => {
+				let smobj, smcfg, smlisteners;
 
-			if( vmcontext.result.hasOwnProperty('machine') ) {
-				smobj  = vmcontext.result.machine;
-				if( vmcontext.result.hasOwnProperty('config') ) {
-					smcfg = vmcontext.result.config;
+				if( result.hasOwnProperty('machine') ) {
+					smobj  = result.machine;
+					if( result.hasOwnProperty('config') ) {
+						smcfg = result.config;
+					}
+					if( result.hasOwnProperty('listeners') ) {
+						smlisteners = result.listeners;
+					}
+				} else {
+					smobj  = result;
 				}
-				if( vmcontext.result.hasOwnProperty('listeners') ) {
-					smlisteners = vmcontext.result.listeners;
+	
+				// Set machine id to node id by default
+				if( !smobj.hasOwnProperty("id") ) {
+					smobj.id = node.id;
 				}
-			} else {
-				smobj  = vmcontext.result;
-			}
-
-			if( !smobj.hasOwnProperty("id") ) {
-				smobj.id = node.id;
-			}
-
-			smobj.id = smobj.id.replace(/[^a-zA-Z0-9\.\s\n\r]/gi,'');
-
-			nodeContext.xstate = { 
-				blueprint: immutable.fromJS(smobj),
-				machineConfig: smcfg,
-				listeners: smlisteners,
-				clock: getXStateClock(node)
-			};
-
-			restartMachine(node);
+	
+				smobj.id = smobj.id.replace(/[^a-zA-Z0-9\.\s\n\r]/gi,'');
+	
+				nodeContext.xstate = { 
+					blueprint: immutable.fromJS(smobj),
+					machineConfig: smcfg,
+					listeners: smlisteners,
+					clock: getXStateClock(node)
+				};
+	
+				restartMachine(node);
+			});
 
 		} catch(err) {
 			this.error(err);
