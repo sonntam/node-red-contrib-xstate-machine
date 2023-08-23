@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.3.1
+
+### Patch Changes
+
+- bb4ae00: Fix dropped output messages that get sent during flow restart or node deployment, e.g. through an initial entry action (issue #95)
+
 ## 1.3.0
 
 ### Minor Changes
