@@ -44,7 +44,7 @@
     "immutable": "4.x",
     "indent-string": "4.x",
     "jsdom": "19.x",
-    "state-machine-cat": "9.x",
+    "state-machine-cat": "11.x",
     "xstate": "4.x"
   },
   "devDependencies": {
