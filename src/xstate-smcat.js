@@ -5,8 +5,14 @@ const indentString = require('indent-string');
 const typeSep = '/';
 const finalNodeSuffix = "Node";
 
-function getStateName(state) {
-    return state.id + typeSep + state.type;
+function sanitizeStateId(state) {
+    let sanitizeStateId = String(state);
+    sanitizeStateId = sanitizeStateId.replaceAll('"', "'");
+    return sanitizeStateId;
+}
+
+function getStateId(state, type) {
+    return "\"" + sanitizeStateId(state.id) + typeSep + (type === undefined ? state.type : type) + "\"";
 }
 
 function getStateAction(actionTrigger) {
@@ -76,7 +82,7 @@ function createChildrenStates(parentState,level) {
     if( transitionsDef ) transitionsDef += ';';
 
     for( let [state,stateObj] of Object.entries(parentState.states) ){
-        let stateDef = getStateName(stateObj) + ` [label="${state}" type=${typeMap(stateObj.type)}]`;
+        let stateDef = getStateId(stateObj) + ` [label="${state}" type=${typeMap(stateObj.type)}]`;
         let transitionDef = '';
 
         let code = getStateCode(stateObj);
@@ -92,7 +98,7 @@ function createChildrenStates(parentState,level) {
 
         // Add additional final state in the diagram for "the" final state
         if( stateObj.type === "final" ) {
-            statesDef.push(getStateName(stateObj) + finalNodeSuffix + ' [label="" type=final]');
+            statesDef.push(getStateId(stateObj) + finalNodeSuffix + ' [label="" type=final]');
         }
     }
 
@@ -100,8 +106,8 @@ function createChildrenStates(parentState,level) {
     if( statesDef.length > 0 && parentState.type !== "parallel" ) {
         let rootNode = getClosestChildState( parentState, parentState.initialStateNodes[0] );
         if( rootNode ) {
-            statesDef.unshift(parentState.id + typeSep + "initial");
-            transitionsDef = statesDef[0] + " => " + getStateName(rootNode) + ";" + transitionsDef;
+            statesDef.unshift(getStateId(parentState, "initial"));
+            transitionsDef = statesDef[0] + " => " + getStateId(rootNode) + ";" + transitionsDef;
         }
     }
     return  { 
@@ -158,7 +164,7 @@ function createTransitions(parentState) {
 
     // If this state is a final state, create another "always" transition from this target state to the real final state node
     if( parentState.type === "final" )
-        transitionsDef.push( getStateName(parentState) + " => " + getStateName(parentState) + finalNodeSuffix );
+        transitionsDef.push( getStateId(parentState) + " => " + getStateId(parentState) + finalNodeSuffix );
 
     for( let transition of parentState.transitions ) {
         let transitionDefs = [];
@@ -170,10 +176,10 @@ function createTransitions(parentState) {
 
         if( !transition.target ) {
             // Self transition
-            transitionDefs.push( getStateName( transition.source ) + " => " + getStateName( transition.source ) );
+            transitionDefs.push( getStateId( transition.source ) + " => " + getStateId( transition.source ) );
         } else {
             for( let targetState of transition.target ) {
-                transitionDefs.push( getStateName( transition.source ) + " => " + getStateName( targetState ) );
+                transitionDefs.push( getStateId( transition.source ) + " => " + getStateId( targetState ) );
             }
         }
         
