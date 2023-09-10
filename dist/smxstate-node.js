@@ -256,13 +256,22 @@ result = (async function(__send__,__done__){
 		if( service )
 			service.stop();
 
-		let machine = xstate.createMachine(
-			context.xstate.blueprint.toJS(),
-			context.xstate.machineConfig ? context.xstate.machineConfig : undefined);
+		let machine;
 
-		service = xstate.interpret(machine, {
-			clock: context.xstate.clock
-		});
+		try {
+			machine = xstate.createMachine(
+				context.xstate.blueprint.toJS(),
+				context.xstate.machineConfig ? context.xstate.machineConfig : undefined);
+	
+			service = xstate.interpret(machine, {
+				clock: context.xstate.clock
+			});
+		} catch(err) {
+			setErrorStatus(node);
+			node.error(err);
+			return;
+		}
+		
 
 		context.xstate.service = service;
 		context.xstate.machine = machine;
@@ -337,8 +346,13 @@ result = (async function(__send__,__done__){
 		service
 			.onTransition( (state) => transitionFcn(state) )
 			.onChange( (context, previousContext) => { if( context !== previousContext ) dataChangedFcn(context, previousContext); } );
-
-		service.start();
+		
+		try {
+			service.start();
+		} catch(err) {
+			setErrorStatus(node);
+			node.error(err);
+		}
 	}
 
 	function getNodeParentPath(node) {
@@ -376,6 +390,10 @@ result = (async function(__send__,__done__){
 		};
 	}
 
+	function setErrorStatus(node) {
+		node.status({ fill: 'red', shape: 'ring', text: 'invalid setup' });
+	}
+
 	function StateMachineNode (config) {
 		RED.nodes.createNode(this, config);
 
@@ -397,7 +415,7 @@ result = (async function(__send__,__done__){
 		this.outstandingTimers    = []; 
 
 		// init the node status
-		node.status({fill: 'red', shape: 'ring', text: 'invalid setup'});
+		setErrorStatus(node);
 		node.config = config;
 		
 		// Send new node info to the UI
@@ -646,3 +664,4 @@ result = (async function(__send__,__done__){
 		}
 	});
 };
+

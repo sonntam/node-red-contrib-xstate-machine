@@ -1,5 +1,13 @@
 # node-red-contrib-xstate-machine
 
+## 1.3.2
+
+### Patch Changes
+
+- 38f62f5: Add node-red version requirement to package.json
+- b3d0fbf: Fix error on rendering state chart if states contain spaces, quotes etc.
+- 46bb305: Fix crashing node-red if invalid xstate configuration is deployed
+
 ## 1.3.1
 
 ### Patch Changes
