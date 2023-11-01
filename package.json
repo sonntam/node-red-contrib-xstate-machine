@@ -52,7 +52,7 @@
     "@changesets/cli": "2.x",
     "del": "6.x",
     "gulp": "4.x",
-    "gulp-chmod": "3.x",
+    "gulp-chmod": "4.x",
     "gulp-file-include": "2.x",
     "gulp-html-escape": "0.x",
     "gulp-inline-source": "4.x",
