@@ -469,6 +469,8 @@ result = (async function(__send__,__done__){
 				};
 	
 				restartMachine(node);
+			}).catch((err) => {
+				this.error(err);
 			});
 
 		} catch(err) {
