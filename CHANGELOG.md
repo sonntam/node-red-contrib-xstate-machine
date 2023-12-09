@@ -1,5 +1,11 @@
 # node-red-contrib-xstate-machine
 
+## 1.3.3
+
+### Patch Changes
+
+- 0f5d597: Fix crash when trying to run an invalid machine setup
+
 ## 1.3.2
 
 ### Patch Changes
