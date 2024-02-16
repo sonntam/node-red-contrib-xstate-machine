@@ -24,7 +24,7 @@
 }</pre>
                 Anywhere in the code you may use the same functions as in the function node such as e.g. <code>node.send()</code>
                 or <code>setTimeout()</code>. Additionally you can use all the exports of the <em>xstate</em> library via the
-                <code>xstate</code> object. For examle to import the <code>assign</code>, <code>raise</code> and <code>log</code> functions type:
+                <code>xstate</code> object. For example to import the <code>assign</code>, <code>raise</code> and <code>log</code> functions type:
 <pre>const { actions, assign } = xstate;
 const { raise, log } = actions;</pre>
             </dd>
@@ -48,10 +48,10 @@ const { raise, log } = actions;</pre>
     <h3>Outputs</h3>
     <p>The two outports output messages of the following specifications:</p>
 	<ol class="node-ports">
-		<li>On occuring event/transition/change of context
+		<li>On occurring event/transition/change of context
             <dl class="message-properties">
 				<dt>topic <span class="property-type">string</span></dt>
-                <dd>Equals to <code>"state"</code> if an event or transition occured. If the data changed it equals to <code>"context"</code>.</dd>
+                <dd>Equals to <code>"state"</code> if an event or transition occurred. If the data changed it equals to <code>"context"</code>.</dd>
 			<dl class="message-properties">
 				<dt>payload <span class="property-type">object</span></dt>
                 <dd>
@@ -74,7 +74,7 @@ const { raise, log } = actions;</pre>
     <p>
         See the default node for an example implementation. Also please refer to the excellent
         <a href="https://xstate.js.org/docs/guides/machines.html" target="_blank">xstate documentation</a>
-        for futher details about how to model your use-case as a xstate machine.
+        for further details about how to model your use-case as a xstate machine.
     </p>
     <p>
         The <code>payload</code> objects for messages with a topic of <code>"state"</code> output from the
@@ -135,7 +135,7 @@ const { raise, log } = actions;</pre>
         is drawn using <a href="https://www.npmjs.com/package/state-machine-cat">state-machine-cat</a>.
     </p>
     <p>
-        On the sidebar you will find a dropdown box containin all running state-machine
+        On the sidebar you will find a dropdown box containing all running state-machine
         instances. Upon selection of an instance the graph below gets redrawn and current
         context is shown. Also the current state is highlighted in red within the graph.
     </p>
