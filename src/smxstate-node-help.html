@@ -39,8 +39,8 @@ const { raise, log } = actions;</pre>
         </dd>
 		<dt>payload <span class="property-type">object</span> </dt>
 		<dd>
-            The data which comes with the event. It can then be used via the 
-            <code>.value</code> property of the event object within 
+            The data which comes with the event. It can then be used via the
+            <code>.value</code> property of the event object within
             action/activity/guard/service callbacks.
 		 </dd>
 	</dl>
@@ -77,13 +77,13 @@ const { raise, log } = actions;</pre>
         for futher details about how to model your use-case as a xstate machine.
     </p>
     <p>
-        The <code>payload</code> objects for messages with a topic of <code>"state"</code> output from the 
+        The <code>payload</code> objects for messages with a topic of <code>"state"</code> output from the
         first outport have the following properties:</p>
     <p>
         <dl class="message-properties">
-            <dt>state <span class="property-type">string or object</span></dt>            
+            <dt>state <span class="property-type">string or object</span></dt>
             <dd>
-                the path of the currently active states as object. If only a top-level 
+                the path of the currently active states as object. If only a top-level
                 state is active then this is a string with the name of the active state.
                 If multiple states are active this is an object where each key is a parent
                 state and each leaf is a string property value, e.g.
@@ -94,7 +94,7 @@ const { raise, log } = actions;</pre>
         childstate21: {}
     }
 }</pre>
-                Here the active state <code>parentstate2.childstate21</code> does not 
+                Here the active state <code>parentstate2.childstate21</code> does not
                 contain any childstate, so the property value is an empty object <code>{}</code>.
             </dd>
 
@@ -115,7 +115,7 @@ const { raise, log } = actions;</pre>
 
             <dt>event <span class="property-type">object</span></dt>
             <dd>
-                the event object (including the <code>.value</code> property containing event data) 
+                the event object (including the <code>.value</code> property containing event data)
                 that triggered this message e.g.
 <pre>{
     type: "TRIGGER", // The event name
@@ -125,7 +125,7 @@ const { raise, log } = actions;</pre>
 
             <dt>context <span class="property-type">object</span></dt>
             <dd>an object containing the current value data context of the machine</dd>
-        </dl> 
+        </dl>
     </p>
 
     <h3>The sidebar</h3>
