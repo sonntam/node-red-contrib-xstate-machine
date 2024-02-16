@@ -40,7 +40,7 @@ const { raise, log } = actions;</pre>
 		<dt>payload <span class="property-type">object</span> </dt>
 		<dd>
             The data which comes with the event. It can then be used via the
-            <code>.value</code> property of the event object within
+            <code>.payload</code> property of the event object within
             action/activity/guard/service callbacks.
 		 </dd>
 	</dl>
@@ -115,16 +115,16 @@ const { raise, log } = actions;</pre>
 
             <dt>event <span class="property-type">object</span></dt>
             <dd>
-                the event object (including the <code>.value</code> property containing event data)
+                the event object (including the <code>.payload</code> property containing event data)
                 that triggered this message e.g.
 <pre>{
     type: "TRIGGER", // The event name
-    value: 5         // The event data (may be an object itself)
+    payload: 5       // The event payload (may be an object itself)
 }</pre>
             </dd>
 
             <dt>context <span class="property-type">object</span></dt>
-            <dd>an object containing the current value data context of the machine</dd>
+            <dd>an object containing the current payload data context of the machine</dd>
         </dl>
     </p>
 
