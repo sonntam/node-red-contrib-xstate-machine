@@ -1,5 +1,12 @@
 # node-red-contrib-xstate-machine
 
+## 1.3.4
+
+### Patch Changes
+
+- 2840689: Removed prominently placed section "migrating from 0.X to 1.0" from README
+- 1a56596: Fixed errors in the docs (thanks @hlovdal)
+
 ## 1.3.3
 
 ### Patch Changes
