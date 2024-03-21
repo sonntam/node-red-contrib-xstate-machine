@@ -52,7 +52,7 @@
     "command-exists-promise": "2.x",
     "immutable": "4.x",
     "indent-string": "4.x",
-    "jsdom": "19.x",
+    "jsdom": "22.x",
     "state-machine-cat": "9.x",
     "xstate": "4.x"
   },
